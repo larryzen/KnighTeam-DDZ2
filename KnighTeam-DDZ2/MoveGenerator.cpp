@@ -3,11 +3,11 @@
 #include "string.h"
 #include "stdlib.h"
 #include "vector"
+#include "DDZCombFactory.h"
 
 using namespace std;
 CMoveGenerator::CMoveGenerator(void)
 {
-	lastWhoseGo=0;
 }
 
 CMoveGenerator::~CMoveGenerator(void)
@@ -19,209 +19,155 @@ CMoveGenerator::~CMoveGenerator(void)
 *  (1)我方为地主，且三个玩家都尚未出牌; (2)上下两家均pass;->主动出牌，代号1
 *  (1)上家未pass,按上家出牌; (2)上家pass,下家未pass,按下家出牌;->被动出牌，代号2
 */
-vector<CARDSMOVE> CMoveGenerator::getMoves(Player p,int whoseGo)
+vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 {
-	vector<CARDSMOVE> p1 =p.p1_general;
-	vector<CARDSMOVE> p2 =p.p2_general;
-	vector<CARDSMOVE> p3 =p.p3_general;
-
-	vector<CARDSMOVE> moves;
+	vector<CARDSMOVE> moves = vector<CARDSMOVE>();
 	bool IsCanGo = false;
-	int turn =whoseGo%3;														 // 轮到哪方出牌，则进行该方主动、被动出牌判断
+	int turn =whoseGo%3;												 // 轮到哪方出牌，则进行该方主动、被动出牌判断
 	unsigned tmp_EachCardNum[15];										 // 根据哪方的牌来获得走步
-	int cardsNum;																	 //  玩家手中牌数量
-	CARDSMOVE p1_lastMove,p2_lastMove,p3_lastMove;	 //  若玩家已走牌不为空，则取出其最后一步出牌
+	int cardsNum;														 //  玩家手中牌数量
 	CARDSMOVE lastMove;													 //	 当前玩家的上家上次出牌牌面值
-
-	if(turn==0)  // 获得我方走步
+	DDZCombFactory ddz_CF;
+	int size = Player::cardsMoveRecords.size();
+	
+	
+	if (Player::cardsMoveRecords.empty())
 	{
-		if(p.p3_IsLandlord==true)// 我方为地主，第一轮出牌
+		if (Player::p3_IsLandlord)
 		{
-			if(p1.empty()&&p2.empty()&&p3.empty())
-			{
-				IsCanGo =true;
-			}
-		}
-
-		if(!p2.empty()&&!p1.empty()) // 上家下家均pass,此轮为我方主动出牌
-		{
-			if((p2.at(p2.size()-1)).cardsType==-1 && (p1.at(p1.size()-1)).cardsType==-1)
-			{
-				IsCanGo = true;
-			}
-		}
-		memcpy(tmp_EachCardNum,p.p3_EachCardNum,sizeof(tmp_EachCardNum));
-
-		if(IsCanGo)
-		{
-			cardsNum =p.p3_cardsList.size();	
-
-			NULL_MOVE(p.lastMove);
-			p.lastPlayer=-1;
-		}
-		else 
-		{
-			if(!p2.empty())
-			{
-				p2_lastMove = p2.at(p2.size()-1);
-
-				if(p2_lastMove.cardsType!=-1)
-				{
-					lastMove=p2_lastMove;
-
-					p.lastMove=p2_lastMove;
-					p.lastPlayer=2;
-				}
-				else
-				{
-					if(!p1.empty())
-					{
-						p1_lastMove=p1.at(p1.size()-1);
-
-						if(p1_lastMove.cardsType!=-1)
-						{
-							lastMove=p1_lastMove;
-
-							p.lastMove=p1_lastMove;
-							p.lastPlayer=1;
-						}
-					}
-				}
-			}
+			IsCanGo = true;
 		}
 	}
-	else if(turn ==2)  //获得玩家1走步
+	else
 	{
-		if(!p2.empty()&&!p3.empty())// 玩家1判断是否为自己主动出牌，不存在判断玩家1、2开始为地主主动出牌
+		if (size - 2 >= 0 && Player::cardsMoveRecords[size - 1].cardsType == PASS
+			&& Player::cardsMoveRecords[size - 2].cardsType == PASS)
 		{
-			if((p2.at(p2.size()-1)).cardsType==-1 && (p3.at(p3.size()-1)).cardsType==-1)
-			{
-				IsCanGo = true;
-			}
+			IsCanGo = true;
 		}
-		memcpy(tmp_EachCardNum,p.p1_EachCardNum,sizeof(tmp_EachCardNum));
 
-		if(IsCanGo)
+		if (size - 1 >=0 && Player::cardsMoveRecords[size - 1].cardsType != PASS)
 		{
-			cardsNum =p.p1_cardsList.size();	
+			lastMove = Player::cardsMoveRecords[size - 1];
 
-			NULL_MOVE(p.lastMove);
-			p.lastPlayer=-1;
+		}
+		else if (size - 2 >= 0 && Player::cardsMoveRecords[size - 2].cardsType != PASS)
+		{
+			lastMove = Player::cardsMoveRecords[size - 2];
+		}
+	}
+
+		
+	
+	if (turn == 1)
+	{
+		if (IsCanGo)
+		{
+			memcpy(tmp_EachCardNum, Player::p1_EachCardNum, sizeof(tmp_EachCardNum));
 		}
 		else
 		{
-			if(!p3.empty())
-			{
-				p3_lastMove = p3.at(p3.size()-1);
-
-				if(p3_lastMove.cardsType!=-1)
-				{
-					lastMove=p3_lastMove;
-
-					
-					p.lastMove=p3_lastMove;
-					p.lastPlayer=3;
-				}
-				else
-				{
-					if(!p2.empty())
-					{
-						p2_lastMove=p2.at(p2.size()-1);
-
-						if(p2_lastMove.cardsType!=-1)
-						{
-							lastMove=p2_lastMove;
-							
-							p.lastMove=p2_lastMove;
-							p.lastPlayer=2;
-						}
-					}
-				}
-			}
+			memcpy(tmp_EachCardNum, Player::p1_EachCardNum, sizeof(tmp_EachCardNum));
 		}
+		
+		cardsNum = Player::p1_cardsNum;
 	}
-	else				//获得玩家2走步
+	else if (turn ==2)
 	{
-		if(!p1.empty()&&!p3.empty())// 玩家2判断是否为自己主动出牌，不存在判断玩家1、2开始为地主主动出牌
+		if (IsCanGo)
 		{
-			if((p1.at(p1.size()-1)).cardsType==-1 && (p3.at(p3.size()-1)).cardsType==-1)
-			{
-				IsCanGo = true;
-			}
-		}
-		memcpy(tmp_EachCardNum,p.p2_EachCardNum,sizeof(tmp_EachCardNum));
-
-		if(IsCanGo)
-		{
-			cardsNum =p.p2_cardsList.size();	
-
-			NULL_MOVE(p.lastMove);
-			p.lastPlayer=-1;
+			memcpy(tmp_EachCardNum, Player::p2_EachCardNum, sizeof(tmp_EachCardNum));
 		}
 		else
 		{
-			if(!p1.empty())
-			{
-				p1_lastMove = p1.at(p1.size()-1);
-
-				if(p1_lastMove.cardsType!=-1)
-				{
-					lastMove=p1_lastMove;
-
-					
-					p.lastMove=p1_lastMove;
-					p.lastPlayer=1;
-				}
-				else
-				{
-					if(!p3.empty())
-					{
-						p3_lastMove=p3.at(p3.size()-1);
-
-						if(p3_lastMove.cardsType!=-1)
-						{
-							lastMove=p3_lastMove;
-
-							
-							p.lastMove=p1_lastMove;
-							p.lastPlayer=1;
-						}
-					}
-				}
-			}
+			memcpy(tmp_EachCardNum, Player::p2_EachCardNum, sizeof(tmp_EachCardNum));
 		}
+		
+		cardsNum = Player::p2_cardsNum;
 	}
+	else
+	{
+		memcpy(tmp_EachCardNum, Player::p3_EachCardNum, sizeof(tmp_EachCardNum));
+		cardsNum = Player::p3_cardsNum;
+	}
+
 
 
 	if(IsCanGo)	// 主动出牌
-	{		
-		vector<CARDSMOVE> tmp_moves =(vector<CARDSMOVE>)getMovesByMyself(cardsNum,tmp_EachCardNum);// 获取持有牌可能的所有走步
-		for(size_t j=0;j<tmp_moves.size();j++)
+	{	
+		ddz_CF = DDZCombFactory(tmp_EachCardNum, cardsNum);
+		//moves = getMovesByMyself(cardsNum,tmp_EachCardNum);
+		Comb c1 = ddz_CF.getComb1LeastSingle();
+		Comb c2 = ddz_CF.getComb2LeastMoves();
+		Comb c3 = ddz_CF.getComb3MaxGain();
+		vector<CARDSMOVE> m1= ddz_CF.getComb2LeastMoves().moves;
+		vector<CARDSMOVE> m2 = ddz_CF.getComb3MaxGain().moves;
+		moves = ddz_CF.getComb1LeastSingle().moves;
+		ddz_CF.setCarryCards1(&moves);
+		ddz_CF.setCarryCards2(&moves);
+		ddz_CF.setCarryCards3(&moves);
+		ddz_CF.setCarryCards4(&moves);
+		for (size_t j = 0; j<moves.size(); j++)
 		{
-			moves.push_back(tmp_moves.at(j));
+			moves[j].outWay = 1;
+			moves[j].side = turn;
 		}
-
-		//VECTORINT method;// 将元素为1或2的vector加入走法器，判断为主动还是被动走步
-		//method.push_back(1);// method=>为1:主动出牌
-		//moves.push_back(method);
 	}
 	else	   // 被动出牌(按其他玩家上一轮出牌走步)
 	{
-		vector<CARDSMOVE> tmp_moves = (vector<CARDSMOVE>) getMovesByOthers(lastMove,tmp_EachCardNum);// 根据其他玩家牌获得我方手中所有走步
-		for(size_t j=0;j<tmp_moves.size();j++)
+		if (0&&turn != 0 || CThinkTable::IsHalfGame())
 		{
-			tmp_moves.at(j).outWay=0;
-			moves.push_back(tmp_moves.at(j));
+			moves = (vector<CARDSMOVE>) getMovesByOthers(lastMove, tmp_EachCardNum);// 根据其他玩家牌获得我方手中所有走步
+			
 		}
-
-		//VECTORINT method;// 将元素为1或2的vector加入走法器，判断为主动还是被动走步
-		//method.push_back(2);// method=>为2:被动出牌
-		//moves.push_back(method);
+		else
+		{
+			ddz_CF = DDZCombFactory(tmp_EachCardNum, cardsNum);
+			vector<CARDSMOVE> tmp_moves = ddz_CF.getComb1LeastSingle().moves;
+			moves = getMovesByCombMovesForOneMove(lastMove, tmp_moves);
+			/*if (moves.size()==1 && Player::p1_IsLandlord)
+			{
+				moves = getMovesByOthers(lastMove,tmp_EachCardNum);
+			}*/
+		}
+		for (size_t j = 0; j<moves.size(); j++)
+		{
+			moves.at(j).outWay = 0;
+			moves[j].side = turn;
+		}
 	}
 	
 	return moves;
 }
 
+vector<CARDSMOVE> CMoveGenerator::getMovesByCombMovesForOneMove(CARDSMOVE key, vector<CARDSMOVE> moves)
+{
+	vector<CARDSMOVE> keyMoves = vector<CARDSMOVE>();
+	if (key.cardsType==THREE_ONE)
+		DDZCombFactory().setCarryCards1(&moves);
+	else if (key.cardsType == THREE_TWO)
+		DDZCombFactory().setCarryCards2(&moves);
+	else if (key.cardsType == THREEJUNKO_TWO)
+		DDZCombFactory().setCarryCards3(&moves);
+	else if (key.cardsType == THREEJUNKO_TWO)
+		DDZCombFactory().setCarryCards4(&moves);
+	for (size_t i = 0; i < moves.size(); i++)
+	{
+		if (IsValidMove(key, moves[i]))
+		{
+			moves[i].outWay=0;
+			moves[i].side = 0;
+			keyMoves.push_back(moves[i]);
+		}
+			
+	}
+
+	CARDSMOVE pass = CARDSMOVE();
+	pass.cardsType = PASS;
+	keyMoves.push_back(pass);
+
+	return keyMoves;
+}
 /**
 *   根据其他玩家出牌获取我方所有走步
 *  @CardsType 出牌类型  @v 出牌详细，如：3个4带5->4445
@@ -242,7 +188,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 		case 2:// 炸弹
 			{
 				unsigned ZhaDanValue = play->getZhaDanValue(v);// 获取炸弹的牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByZhaDan(ZhaDanValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType02ZhaDan(ZhaDanValue, cards);
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
 					moves.push_back(tmp_moves.at(i));
@@ -253,7 +199,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 		case 3:// 单牌
 			{
 				int SingleCardValue = play->getSingleValue(v);// 获取单牌的牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesBySingleCard(SingleCardValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType03SingleCard(SingleCardValue, cards);
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
 					moves.push_back(tmp_moves.at(i));
@@ -264,7 +210,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 		case 4:// 对牌
 			{
 				int CoupleCardsValue = play->getCoupleValue(v);// 获取对牌的牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByCoupleCards(CoupleCardsValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType04CoupleCards(CoupleCardsValue, cards);
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
 					moves.push_back(tmp_moves.at(i));
@@ -275,7 +221,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 		case 5:// 三条
 			{
 				int ThreeCardsValue = play->getSanTiaoValue(v);// 获取三条的牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByThreeTiaoCards(ThreeCardsValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType05ThreeTiaoCards(ThreeCardsValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -287,7 +233,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 		case 6:// 三带单
 			{
 				int Three_OneCardsValue = play->getThree_OneValue(v).at(0);// 获取三带单的牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByThree_One(Three_OneCardsValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType06Three_One(Three_OneCardsValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -299,7 +245,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 		case 7:// 三带双
 			{
 				int Three_TwoCardsValue = play->getThree_TwoValue(v).at(0);// 获取三带双的牌面值
-				tmp_moves =(vector<CARDSMOVE>)getMovesByThree_Two(Three_TwoCardsValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType07Three_Two(Three_TwoCardsValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -312,7 +258,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 			{
 				int cardBeginValue = play->getSingleJunkoValue(v).at(0);// 获取单顺开始牌面值
 				int cardEndValue = play->getSingleJunkoValue(v).at(1);	// 获取单顺结束牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesBySingleJunko(cardBeginValue,cardEndValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType08SingleJunko(cardBeginValue, cardEndValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -325,7 +271,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 			{
 				int cardBeginValue = play->getDualJunkoValue(v).at(0);// 获取双顺开始牌面值
 				int cardEndValue = play->getDualJunkoValue(v).at(1);  // 获取双顺结束牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByDualJunko(cardBeginValue,cardEndValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType09DualJunko(cardBeginValue, cardEndValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -338,7 +284,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 			{
 				int cardBeginValue = play->getThree_ShunValue(v).at(0);// 获取三顺开始牌面值
 				int cardEndValue = play->getThree_ShunValue(v).at(1);  // 获取三顺结束牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByThree_Shun(cardBeginValue,cardEndValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType10Three_Shun(cardBeginValue, cardEndValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -351,7 +297,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 			{
 				int cardBeginValue = play->getThree_OneValue(v).at(0);// 获取三顺带单开始牌面值
 				int cardEndValue = play->getThree_OneValue(v).at(1);  // 获取三顺带单结束牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByThree_Shun_One(cardBeginValue,cardEndValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType11Three_Shun_One(cardBeginValue, cardEndValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -364,7 +310,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 			{
 				int cardBeginValue = play->getThree_TwoValue(v).at(0); // 获取三顺带双开始牌面值
 				int cardEndValue = play->getThree_TwoValue(v).at(1);   // 获取三顺带双结束牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByThree_Shun_Couple(cardBeginValue,cardEndValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType12Three_Shun_Couple(cardBeginValue, cardEndValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -376,7 +322,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 		case 13:// 四带二
 			{
 				int Four_TwoCardsValue = play->getFour_TwoValue(v).at(0);	    // 获取四带二单的牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByFour_Two(Four_TwoCardsValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType13Four_Two(Four_TwoCardsValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -387,7 +333,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 		case 14:// 四带二对
 			{
 				int Four_TwoCoupleCardsValue = play->getFour_TwoCoupleValue(v).at(0);  // 获取四带二对的牌面值
-				tmp_moves = (vector<CARDSMOVE>)getMovesByFour_TwoCouple(Four_TwoCoupleCardsValue,cards);
+				tmp_moves = (vector<CARDSMOVE>)getMovesByType14Four_TwoCouple(Four_TwoCoupleCardsValue, cards);
 
 				for(size_t i=0;i<tmp_moves.size();i++)
 				{
@@ -399,7 +345,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 			break;
 		}
 
-		if(CardsType!=ZHADAN || CardsType!=ROCKET)// 炸弹和火箭管一般牌型
+		if(CardsType!=ZHADAN && CardsType!=ROCKET)// 炸弹和火箭管一般牌型
 		{
 			for(size_t i=0;i<13;i++)
 			{
@@ -426,6 +372,11 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOthers(CARDSMOVE lastMove,unsigned *
 				moves.push_back(rocket);
 			}
 		}		
+
+		// 被动出牌加入PASS走步
+		CARDSMOVE m = CARDSMOVE();
+		m.cardsType = PASS;
+		moves.push_back(m);
 		return moves;
 }
 
@@ -456,76 +407,76 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByCardsNum(unsigned n,unsigned *cards)
 	switch(n)
 	{
 	case 1:// 获取牌张数为1的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByOneCard(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy01Card(cards);
 		break;
 
 	case 2:// 获取牌张数为2的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByTwoCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy02Cards(cards);
 		break;
 
 	case 3:// 获取牌张数为3的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByThreeCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy03Cards(cards);
 		break;
 
 	case 4:// 获取牌张数为4的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByFourCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy04Cards(cards);
 		break;
 
 	case 5:// 获取牌张数为5的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByFiveCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy05Cards(cards);
 		break;
 
 	case 6:// 获取牌张数为6的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesBySixCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy06Cards(cards);
 		break;
 
 	case 7:// 获取牌张数为7的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesBySevenCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy07Cards(cards);
 		break;
 
 	case 8:// 获取牌张数为8的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByEightCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy08Cards(cards);
 		break;
 
 	case 9:// 获取牌张数为9的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByNineCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy09Cards(cards);
 		break;
 
 	case 10:// 获取牌张数为10的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByTenCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy10Cards(cards);
 		break;
 
 	case 11:// 获取牌张数为11的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByElevenCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy11Cards(cards);
 		break;
 
 	case 12:// 获取牌张数为12的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByTwelveCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy12Cards(cards);
 		break;
 
 	case 13:// 不存在13张的牌型
 		
 	case 14:// 获取牌张数为14的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByForteenCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy14Cards(cards);
 		break;
 	case 15:// 获取牌张数为15的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByFifteenCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy15Cards(cards);
 		break;
 
 	case 16:// 获取牌张数为16的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesBySixteenCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy16Cards(cards);
 		break;
 
 	case 17:// 不存在17张的牌型
 	
 	case 18:// 获取牌张数为18的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByEighteenCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy18Cards(cards);
 		break;
 
 	case 19:// 不存在19张的牌型
 		break;
 	case 20:// 获取牌张数为20的所有走步
-		tmp_moves=(vector<CARDSMOVE>)getMovesByTwentyCards(cards);
+		tmp_moves=(vector<CARDSMOVE>)getMovesBy20Cards(cards);
 		break;
 	}
 
@@ -534,7 +485,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByCardsNum(unsigned n,unsigned *cards)
 
 
 /**获取我方出牌为一张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByOneCard(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy01Card(unsigned *cards)
 {
 	vector<CARDSMOVE> OneCard_moves;
 	unsigned tmp_cards[15];
@@ -555,7 +506,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByOneCard(unsigned *cards)
 }
 
 /**获取我方出牌为两张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByTwoCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy02Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> TwoCards_moves;
 	unsigned tmp_cards[15];
@@ -586,7 +537,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByTwoCards(unsigned *cards)
 }
 
 /**获取我方出牌为三张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByThreeCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy03Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> ThreeCards_moves;
 	unsigned tmp_cards[15];
@@ -610,7 +561,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThreeCards(unsigned *cards)
 }
 
 /**获取我方出牌为四张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByFourCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy04Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> FourCards_moves;
 	unsigned tmp_cards[15];
@@ -640,7 +591,8 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFourCards(unsigned *cards)
 			{
 				if(tmp_cards[j]>=1&&j!=i) // 查找手中数量大于等于1的牌型，作为带牌
 				{
-					tmp_vector.cards.push_back(j);			
+					tmp_vector.cards.push_back(j);	
+					break;		
 				}			
 			}
 			if(tmp_vector.cards.size()<4)
@@ -659,7 +611,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFourCards(unsigned *cards)
 }
 
 /**获取我方出牌为五张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByFiveCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy05Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> FiveCards_moves;
 	unsigned tmp_cards[15];
@@ -691,7 +643,8 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFiveCards(unsigned *cards)
 				{
 					
 					tmp_vector.cards.push_back(j);
-					tmp_vector.cards.push_back(j);			
+					tmp_vector.cards.push_back(j);
+					break;//任意带一对牌			
 				}
 			}
 			if(tmp_vector.cards.size()<5)
@@ -710,7 +663,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFiveCards(unsigned *cards)
 }
 
 /**获取我方出牌为六张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesBySixCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy06Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> SixCards_moves;
 	unsigned tmp_cards[15];
@@ -741,6 +694,20 @@ vector<CARDSMOVE> CMoveGenerator::getMovesBySixCards(unsigned *cards)
 			SixCards_moves.push_back(tmp_vector);
 		}
 
+		if (HaveThreeJunko(i, 2, tmp_cards))// 有i->i+2的三顺
+		{
+			CARDSMOVE tmp_vector;
+			for (size_t tmp = i; tmp<i + 2; tmp++)
+			{
+				for (size_t k = 0; k<3; k++)
+				{
+					tmp_vector.cards.push_back(tmp);
+				}
+			}
+
+			tmp_vector.cardsType = 10;// 在走步后面追加牌型，三顺牌型为10
+			SixCards_moves.push_back(tmp_vector);
+		}
 		if(tmp_cards[i]==4)// 四带二单
 		{
 			VECTORINT carryCards;
@@ -778,7 +745,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesBySixCards(unsigned *cards)
 
 
 /**获取我方出牌为七张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesBySevenCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy07Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> SevenCards_moves;
 	unsigned tmp_cards[15];
@@ -803,7 +770,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesBySevenCards(unsigned *cards)
 
 
 /**获取我方出牌为八张的走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByEightCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy08Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> EightCards_moves;
 	unsigned tmp_cards[15];
@@ -858,7 +825,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByEightCards(unsigned *cards)
 					tmp_vector.cards.push_back(k);
 				}
 			}
-			for(size_t m=0;m<carryCards.size();m++)
+			for(size_t m=0;m<2;m++)
 			{
 				tmp_vector.cards.push_back(carryCards[m]);
 			}
@@ -877,6 +844,10 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByEightCards(unsigned *cards)
 				if(i1!=i&&tmp_cards[i1]>1)// 对牌以上
 				{
 					carryCards.push_back(i1);
+					if (carryCards.size() == 2)
+					{
+						break;
+					}
 				}
 			}
 			if(carryCards.size()<2)
@@ -905,7 +876,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByEightCards(unsigned *cards)
 
 
 /**获取我方出牌为九张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByNineCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy09Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> NineCards_moves;
 	unsigned tmp_cards[15];
@@ -932,7 +903,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByNineCards(unsigned *cards)
 			{
 				for(size_t k=0;k<3;k++)
 				{
-					tmp_vector.cards.push_back(i);
+					tmp_vector.cards.push_back(tmp);
 				}
 			}
 
@@ -946,7 +917,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByNineCards(unsigned *cards)
 
 
 /**获取我方出牌为十张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByTenCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy10Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> TenCards_moves;
 	unsigned tmp_cards[15];
@@ -1022,7 +993,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByTenCards(unsigned *cards)
 
 
 /**获取我方出牌为十一张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByElevenCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy11Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> ElevenCards_moves;
 	unsigned tmp_cards[15];
@@ -1047,7 +1018,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByElevenCards(unsigned *cards)
 }
 
 /**获取我方出牌为十二张的走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByTwelveCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy12Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> TwelveCards_moves;
 	unsigned tmp_cards[15];
@@ -1107,7 +1078,11 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByTwelveCards(unsigned *cards)
 			{
 				if((i1<i||i1>i+2)&&tmp_cards[i1]>0)
 				{	
-					carryCards.push_back(i1);		
+					carryCards.push_back(i1);
+					if (carryCards.size() == 3)
+					{
+						break;
+					}
 				}
 			}
 			if(carryCards.size()<3)
@@ -1138,7 +1113,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByTwelveCards(unsigned *cards)
 }
 
 /**获取我方出牌为十四张的走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByForteenCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy14Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> ForteenCards_moves;
 	unsigned tmp_cards[15];
@@ -1166,7 +1141,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByForteenCards(unsigned *cards)
 }
 
 /**获取我方出牌为十五张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByFifteenCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy15Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> FifteenCards_moves;
 	unsigned tmp_cards[15];
@@ -1199,6 +1174,10 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFifteenCards(unsigned *cards)
 				if((i1<i||i1>i+2)&&tmp_cards[i1]>1)// 对牌以上
 				{
 					carryCards.push_back(i1);
+					if (carryCards.size() == 3)
+					{
+						break;
+					}
 				}
 			}
 
@@ -1229,7 +1208,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFifteenCards(unsigned *cards)
 }
 
 /**获取我方出牌为十六张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesBySixteenCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy16Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> SixteenCards_moves;
 	unsigned tmp_cards[15];
@@ -1259,7 +1238,11 @@ vector<CARDSMOVE> CMoveGenerator::getMovesBySixteenCards(unsigned *cards)
 			{
 				if((i1<i||i1>i+3)&&tmp_cards[i1]>0)
 				{	
-					carryCards.push_back(i1);		
+					carryCards.push_back(i1);	
+					if (carryCards.size() == 4)
+					{
+						break;
+					}
 				}
 			}
 			if(carryCards.size()<4)
@@ -1291,7 +1274,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesBySixteenCards(unsigned *cards)
 
 
 /**获取我方出牌为十八张的走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByEighteenCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy18Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> EighteenCards_moves;
 	unsigned tmp_cards[15];
@@ -1332,7 +1315,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByEighteenCards(unsigned *cards)
 }
 
 /**获取我方出牌为二十张的走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByTwentyCards(unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesBy20Cards(unsigned *cards)
 {
 	vector<CARDSMOVE> TwentyCards_moves;
 	unsigned tmp_cards[15];
@@ -1362,7 +1345,11 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByTwentyCards(unsigned *cards)
 			{
 				if((i1<i||i1>i+4)&&tmp_cards[i1]>0)
 				{	
-					carryCards.push_back(i1);		
+					carryCards.push_back(i1);
+					if (carryCards.size() == 5)
+					{
+						break;
+					}
 				}
 			}
 			if(carryCards.size()<5)
@@ -1398,6 +1385,10 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByTwentyCards(unsigned *cards)
 				if((i1<i||i1>i+3)&&tmp_cards[i1]>1)// 对牌以上
 				{
 					carryCards.push_back(i1);
+					if (carryCards.size() == 4)
+					{
+						break;
+					}
 				}
 			}
 
@@ -1427,7 +1418,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByTwentyCards(unsigned *cards)
 	return TwentyCards_moves;
 }
 
-/**		判断是否一副牌有从指定位置的指定数量的单顺			*/
+/**		判断是否一副牌有从指定位置的指定N连的单顺			*/
 /**   @start 开始位置,最小为0 @ JunkoNum 单顺数量  @ cards[] 牌	*/
 bool CMoveGenerator::HaveSingleJunko(unsigned start,unsigned JunkoNum,unsigned *cards)
 {
@@ -1448,7 +1439,7 @@ bool CMoveGenerator::HaveSingleJunko(unsigned start,unsigned JunkoNum,unsigned *
 }
 
 
-/**		判断是否一副牌有从指定位置的指定数量的双顺			*/
+/**		判断是否一副牌有从指定位置的指定N连的双顺			*/
 /**   @start 开始位置,最小为0 @ JunkoNum 双顺数量  @ cards[] 牌	*/
 bool CMoveGenerator::HaveDualJunko(unsigned start,unsigned JunkoNum,unsigned *cards)
 {
@@ -1468,7 +1459,7 @@ bool CMoveGenerator::HaveDualJunko(unsigned start,unsigned JunkoNum,unsigned *ca
 	return flag;
 }
 
-/**		判断是否一副牌有从指定位置的指定数量的三顺			*/
+/**		判断是否一副牌有从指定位置的指定N连的三顺			*/
 /**   @start 开始位置,最小为0 @ JunkoNum 三顺数量  @ cards[] 牌	*/
 bool CMoveGenerator::HaveThreeJunko(unsigned start,unsigned JunkoNum,unsigned *cards)
 {
@@ -1489,7 +1480,7 @@ bool CMoveGenerator::HaveThreeJunko(unsigned start,unsigned JunkoNum,unsigned *c
 }
 
 /**根据对方炸弹获得所有炸弹走步 */
-vector<CARDSMOVE> CMoveGenerator::getMovesByZhaDan(unsigned ZhaDanValue,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType02ZhaDan(unsigned ZhaDanValue,unsigned *cards)
 {
 	vector<CARDSMOVE> ZhaDan_moves;
 	unsigned tmp_cards[15];
@@ -1523,7 +1514,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByZhaDan(unsigned ZhaDanValue,unsigned
 }
 
 /** 根据对方单牌获得我方所有单牌走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesBySingleCard(unsigned SingleCard,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType03SingleCard(unsigned SingleCard, unsigned *cards)
 {
 	vector<CARDSMOVE> SingleCard_moves;
 	unsigned tmp_cards[15];
@@ -1544,7 +1535,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesBySingleCard(unsigned SingleCard,unsig
 }
 
 /** 根据对方对牌获得我方所有对牌走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByCoupleCards(unsigned CoupleCards,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType04CoupleCards(unsigned CoupleCards, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1566,7 +1557,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByCoupleCards(unsigned CoupleCards,uns
 }
 
 /** 根据对方三条获得我方所有三条走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByThreeTiaoCards(unsigned ThreeCards,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType05ThreeTiaoCards(unsigned ThreeCards, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1590,7 +1581,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThreeTiaoCards(unsigned ThreeCards,u
 }
 
 /** 根据对方三带一获得我方所有三带一走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByThree_One(unsigned Three_OneCards,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType06Three_One(unsigned Three_OneCards, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1609,6 +1600,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThree_One(unsigned Three_OneCards,un
 				if(tmp_cards[j]>=1&&j!=i) // 查找手中数量大于等于1的牌型，作为带牌
 				{
 					tmp_vector.cards.push_back(j);	
+					break;
 				}
 			}
 			tmp_vector.cardsType=6;// 在走步后面追加牌型，三带单牌型为6
@@ -1620,7 +1612,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThree_One(unsigned Three_OneCards,un
 }
 
 /** 根据对方三带二获得我方所有三带二走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Two(unsigned Three_TwoCards,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType07Three_Two(unsigned Three_TwoCards, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1640,6 +1632,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Two(unsigned Three_TwoCards,un
 				{
 					tmp_vector.cards.push_back(j);	
 					tmp_vector.cards.push_back(j);
+					break;
 				}
 			}
 
@@ -1652,7 +1645,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Two(unsigned Three_TwoCards,un
 }
 
 /** 根据对方单顺获得我方所有单顺走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesBySingleJunko(unsigned cardBeginValue,unsigned cardEndValue,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType08SingleJunko(unsigned cardBeginValue, unsigned cardEndValue, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1688,7 +1681,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesBySingleJunko(unsigned cardBeginValue,
 }
 
 /** 根据对方双顺获得我方所有双顺走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByDualJunko(unsigned cardBeginValue,unsigned cardEndValue,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType09DualJunko(unsigned cardBeginValue, unsigned cardEndValue, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1730,7 +1723,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByDualJunko(unsigned cardBeginValue,un
 }
 
 /** 根据对方三顺获得我方所有三顺走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Shun(unsigned cardBeginValue,unsigned cardEndValue,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType10Three_Shun(unsigned cardBeginValue, unsigned cardEndValue, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1769,7 +1762,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Shun(unsigned cardBeginValue,u
 }
 
 /** 根据对方三顺带单获得我方所有三顺带单走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Shun_One(unsigned cardBeginValue,unsigned cardEndValue,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType11Three_Shun_One(unsigned cardBeginValue, unsigned cardEndValue, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1796,7 +1789,11 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Shun_One(unsigned cardBeginVal
 			{
 				if((i1<i||i1>i+JunkoNum-1)&&tmp_cards[i1]>0)
 				{
-					carryCards.push_back(i1);		
+					carryCards.push_back(i1);
+					if (carryCards.size() == JunkoNum)
+					{
+						break;
+					}
 				}
 			}
 
@@ -1828,48 +1825,8 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Shun_One(unsigned cardBeginVal
 	return Three_Shun_One_moves;
 }
 
-
-/**组合算法，将指定牌进行排列组合 */
-vector<unsigned> CMoveGenerator::combinateCards(vector<unsigned> tmp)
-{
-	for(size_t i=0;i<tmp.size();i++)
-	{
-		if(tmp.at(i)==0)
-		{
-			if(i>0)
-			{
-				if(tmp.at(i-1)==1)
-				{
-					tmp.at(i)=1;
-					tmp.at(i-1)=0;
-					int b=0;
-					for(size_t j=0;j<i-1;j++)
-					{	
-						if(tmp.at(j)==1)
-						{
-							if(tmp.at(b)==0)
-							{
-								tmp.at(b)=1;
-								b++;
-								tmp.at(j)=0;
-							}
-							else
-							{
-								b++;
-							}
-						}
-					}
-					break;
-				}
-			}
-		}
-	}
-
-	return tmp;
-}
-
 /** 根据对方三顺带双获得我方所有三顺带双走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Shun_Couple(unsigned cardBeginValue,unsigned cardEndValue,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType12Three_Shun_Couple(unsigned cardBeginValue, unsigned cardEndValue, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1896,6 +1853,10 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Shun_Couple(unsigned cardBegin
 				if((i1<i||i1>i+JunkoNum-1)&&tmp_cards[i1]>1)
 				{
 					carryCards.push_back(i1);
+					if (carryCards.size() == JunkoNum)
+					{
+						break;
+					}
 				}
 			}
 
@@ -1928,7 +1889,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByThree_Shun_Couple(unsigned cardBegin
 }
 
 /** 根据对方四带二单获得我方所有四带二单走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByFour_Two(unsigned Four_TwoCards,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType13Four_Two(unsigned Four_TwoCards, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1947,6 +1908,10 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFour_Two(unsigned Four_TwoCards,unsi
 					for(size_t tmp=0;tmp<tmp_cards[i1];tmp++)
 					{
 						carryCards.push_back(i1);
+						if (carryCards.size() == 2)
+						{
+							break;
+						}
 					}
 				}
 			}
@@ -1976,7 +1941,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFour_Two(unsigned Four_TwoCards,unsi
 }
 
 /** 根据对方四带二双获得我方所有四带二双走步*/
-vector<CARDSMOVE> CMoveGenerator::getMovesByFour_TwoCouple(unsigned Four_TwoCoupleCards,unsigned *cards)
+vector<CARDSMOVE> CMoveGenerator::getMovesByType14Four_TwoCouple(unsigned Four_TwoCoupleCards, unsigned *cards)
 {
 	unsigned tmp_cards[15];
 	memcpy(tmp_cards,cards,sizeof(tmp_cards));
@@ -1992,6 +1957,11 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFour_TwoCouple(unsigned Four_TwoCoup
 				if(i1!=i&&tmp_cards[i1]>1)
 				{
 					carryCards.push_back(i1);
+					carryCards.push_back(i1);
+					if (carryCards.size() == 4)
+					{
+						break;
+					}
 				}
 			}
 
@@ -2018,46 +1988,6 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByFour_TwoCouple(unsigned Four_TwoCoup
 	}
 	return Four_TwoCouple_moves;
 }
-
-
-//MOVES CMoveGenerator::getBasicMovesByMyself(Player p,int basicIndex)
-//{
-//	MOVES moves =getMovesByMyself(p.p3_cardsList.size(),p.p3_EachCardNum);
-//	MOVES singleOrSingleJunko;
-//	MOVES coupleOrDualJunko;
-//	MOVES threeOrThreeJunko;
-//
-//	for(size_t i=0;i<moves.size();i++)
-//	{
-//		vector<int> tmp_move=moves.at(i);
-//
-//		if(tmp_move.at(tmp_move.size()-1)==3||tmp_move.at(tmp_move.size()-1)==8)
-//		{
-//			singleOrSingleJunko.push_back(tmp_move);
-//		}
-//		else if(tmp_move.at(tmp_move.size()-1)==4||tmp_move.at(tmp_move.size()-1)==9)
-//		{
-//			coupleOrDualJunko.push_back(tmp_move);
-//		}
-//		else if(tmp_move.at(tmp_move.size()-1)==5||tmp_move.at(tmp_move.size()-1)==6||tmp_move.at(tmp_move.size()-1)==7||tmp_move.at(tmp_move.size()-1)==11||tmp_move.at(tmp_move.size()-1)==12)
-//		{
-//			threeOrThreeJunko.push_back(tmp_move);
-//		}
-//	}
-//
-//	if(basicIndex ==1)
-//	{
-//		return singleOrSingleJunko;
-//	}
-//	else if(basicIndex ==2)
-//	{
-//		return coupleOrDualJunko;
-//	}
-//	else
-//	{
-//		return threeOrThreeJunko;
-//	}
-//}
 
 /**
 *	两种走步能否管上（即一种走步能否大过另一种走步）
@@ -2152,7 +2082,20 @@ bool CMoveGenerator::IsValidMove(CARDSMOVE m1,CARDSMOVE m2)
 				}
 			break;
 			}
-	
+		case THREE_ONE:
+		{
+						  vector<unsigned> cardsInfo1 = play->getThree_OneValue(cards1);
+						  vector<unsigned> cardsInfo2 = play->getThree_OneValue(cards2);
+					return cardsInfo1.at(0)<cardsInfo2.at(0);
+					break;
+		}
+		case THREE_TWO:
+		{
+						  vector<unsigned> cardsInfo1 = play->getThree_TwoValue(cards1);
+						  vector<unsigned> cardsInfo2 = play->getThree_TwoValue(cards2);
+						  return cardsInfo1.at(0)<cardsInfo2.at(0);
+						  break;
+		}
 		case SINGLEJUNKO:
 			{
 					vector<unsigned> cardsInfo1=play->getSingleJunkoValue(cards1);
@@ -2264,327 +2207,12 @@ bool CMoveGenerator::IsValidJunkoMove(vector<unsigned> cardsInfo1,vector<unsigne
 	{
 			return false;
 	}
-	else if(startValue1>startValue2)
+	else if(startValue1>=startValue2)
 	{
 			return false;
 	}
 	else
 	{
 		return true;
-	}
-}
-
-
-/**
-*	组合库入口
-*   按牌型优先级进行组合
-*	目前引入 8 种组合
-*/
-void CMoveGenerator::PriorityCombinatoriaLibrary(Player p)
-{
-
-	CombsLib combs;
-	int len;
-	initP3_IsExistCardsType(p);
-	vector<CARDSMOVE> p3_moves = p.p3_allMoves;
-	int cardsNum=p.p3_cardsNum;
-	unsigned tmp_EachCardsNum[15];
-	memcpy(tmp_EachCardsNum,p.p3_EachCardNum,sizeof(tmp_EachCardsNum));
-
-	vector<unsigned> v_cardsTypes;
-		#pragma region  组合1
-	v_cardsTypes.push_back(ROCKET); 
-	v_cardsTypes.push_back(ZHADAN); 
-	v_cardsTypes.push_back(THREEJUNKO_ONE); 
-	v_cardsTypes.push_back(THREEJUNKO_TWO); 
-	v_cardsTypes.push_back(DUALJUNKO); 
-	v_cardsTypes.push_back(SINGLEJUNKO); 
-	v_cardsTypes.push_back(THREE_ONE); 
-	v_cardsTypes.push_back(THREE_TWO); 
-	v_cardsTypes.push_back(THREEJUNKO); 
-	v_cardsTypes.push_back(SANTIAO); 
-	v_cardsTypes.push_back(COUPLE); 
-	v_cardsTypes.push_back(SINGLE); 
-	v_cardsTypes.push_back(FOUR_TWO); 
-	v_cardsTypes.push_back(FOUR_TWO_COUPLE); 
-	combs.push_back(comb(p,v_cardsTypes));
-	v_cardsTypes.clear();
-	p.p3_cardsNum=cardsNum;
-	p.p3_allMoves=p3_moves;
-	memcpy(p.p3_EachCardNum,tmp_EachCardsNum,sizeof(p.p3_EachCardNum));
-	#pragma endregion
-
-		#pragma region  组合2
-	v_cardsTypes.push_back(ROCKET); 
-	v_cardsTypes.push_back(ZHADAN); 
-	v_cardsTypes.push_back(THREEJUNKO_TWO); 
-	v_cardsTypes.push_back(THREEJUNKO_ONE); 
-	v_cardsTypes.push_back(DUALJUNKO); 
-	v_cardsTypes.push_back(SINGLEJUNKO); 
-	v_cardsTypes.push_back(THREE_ONE); 
-	v_cardsTypes.push_back(THREE_TWO); 
-	v_cardsTypes.push_back(THREEJUNKO); 
-	v_cardsTypes.push_back(SANTIAO); 
-	v_cardsTypes.push_back(COUPLE); 
-	v_cardsTypes.push_back(SINGLE); 
-	v_cardsTypes.push_back(FOUR_TWO); 
-	v_cardsTypes.push_back(FOUR_TWO_COUPLE); 
-	combs.push_back(comb(p,v_cardsTypes));
-	v_cardsTypes.clear();
-	p.p3_cardsNum=cardsNum;
-	p.p3_allMoves=p3_moves;
-	memcpy(p.p3_EachCardNum,tmp_EachCardsNum,sizeof(p.p3_EachCardNum));
-	#pragma endregion
-
-		#pragma region 组合3
-	v_cardsTypes.push_back(ROCKET); 
-	v_cardsTypes.push_back(ZHADAN); 
-	v_cardsTypes.push_back(SINGLEJUNKO); 
-	v_cardsTypes.push_back(THREEJUNKO_ONE); 
-	v_cardsTypes.push_back(THREEJUNKO_TWO); 
-	v_cardsTypes.push_back(DUALJUNKO); 
-	v_cardsTypes.push_back(THREE_ONE); 
-	v_cardsTypes.push_back(THREE_TWO); 
-	v_cardsTypes.push_back(THREEJUNKO); 
-	v_cardsTypes.push_back(SANTIAO); 
-	v_cardsTypes.push_back(COUPLE); 
-	v_cardsTypes.push_back(SINGLE); 
-	v_cardsTypes.push_back(FOUR_TWO); 
-	v_cardsTypes.push_back(FOUR_TWO_COUPLE); 
-	combs.push_back(comb(p,v_cardsTypes));
-	v_cardsTypes.clear();
-	p.p3_cardsNum=cardsNum;
-	p.p3_allMoves=p3_moves;
-	memcpy(p.p3_EachCardNum,tmp_EachCardsNum,sizeof(p.p3_EachCardNum));
-	#pragma endregion
-
-		#pragma region 组合4
-	v_cardsTypes.push_back(ROCKET); 
-	v_cardsTypes.push_back(ZHADAN); 
-	v_cardsTypes.push_back(DUALJUNKO); 
-	v_cardsTypes.push_back(SINGLEJUNKO); 
-	v_cardsTypes.push_back(THREEJUNKO_TWO); 
-	v_cardsTypes.push_back(THREEJUNKO_ONE); 
-	v_cardsTypes.push_back(THREE_ONE); 
-	v_cardsTypes.push_back(THREE_TWO); 
-	v_cardsTypes.push_back(THREEJUNKO); 
-	v_cardsTypes.push_back(SANTIAO); 
-	v_cardsTypes.push_back(COUPLE); 
-	v_cardsTypes.push_back(SINGLE); 
-	v_cardsTypes.push_back(FOUR_TWO); 
-	v_cardsTypes.push_back(FOUR_TWO_COUPLE); 
-	combs.push_back(comb(p,v_cardsTypes));
-	v_cardsTypes.clear();
-	p.p3_cardsNum=cardsNum;
-	p.p3_allMoves=p3_moves;
-	memcpy(p.p3_EachCardNum,tmp_EachCardsNum,sizeof(p.p3_EachCardNum));
-	#pragma endregion
-
-		#pragma region 组合5
-	v_cardsTypes.push_back(ROCKET); 
-	v_cardsTypes.push_back(ZHADAN); 
-	v_cardsTypes.push_back(THREEJUNKO_ONE); 
-	v_cardsTypes.push_back(THREEJUNKO_TWO); 
-	v_cardsTypes.push_back(THREE_ONE); 
-	v_cardsTypes.push_back(THREE_TWO); 
-	v_cardsTypes.push_back(DUALJUNKO); 
-	v_cardsTypes.push_back(SINGLEJUNKO);
-	v_cardsTypes.push_back(THREEJUNKO); 
-	v_cardsTypes.push_back(SANTIAO); 
-	v_cardsTypes.push_back(FOUR_TWO); 
-	v_cardsTypes.push_back(FOUR_TWO_COUPLE); 
-	v_cardsTypes.push_back(COUPLE); 
-	v_cardsTypes.push_back(SINGLE); 
-	
-	combs.push_back(comb(p,v_cardsTypes));
-	v_cardsTypes.clear();
-	p.p3_cardsNum=cardsNum;
-	p.p3_allMoves=p3_moves;
-	memcpy(p.p3_EachCardNum,tmp_EachCardsNum,sizeof(p.p3_EachCardNum));
-	#pragma endregion
-
-		#pragma region 组合6
-	v_cardsTypes.push_back(ROCKET); 
-	v_cardsTypes.push_back(ZHADAN); 
-	v_cardsTypes.push_back(THREEJUNKO_TWO); 
-	v_cardsTypes.push_back(THREEJUNKO_ONE); 
-	v_cardsTypes.push_back(DUALJUNKO); 
-	v_cardsTypes.push_back(SINGLEJUNKO); 
-	v_cardsTypes.push_back(THREE_ONE); 
-	v_cardsTypes.push_back(THREE_TWO); 
-	v_cardsTypes.push_back(THREEJUNKO); 
-	v_cardsTypes.push_back(SANTIAO); 
-	v_cardsTypes.push_back(COUPLE); 
-	v_cardsTypes.push_back(SINGLE); 
-	v_cardsTypes.push_back(FOUR_TWO); 
-	v_cardsTypes.push_back(FOUR_TWO_COUPLE); 
-	combs.push_back(comb(p,v_cardsTypes));
-	v_cardsTypes.clear();
-	p.p3_cardsNum=cardsNum;
-	p.p3_allMoves=p3_moves;
-	memcpy(p.p3_EachCardNum,tmp_EachCardsNum,sizeof(p.p3_EachCardNum));
-	#pragma endregion
-
-		#pragma region 组合7
-	v_cardsTypes.push_back(ROCKET); 
-	v_cardsTypes.push_back(FOUR_TWO); 
-	v_cardsTypes.push_back(ZHADAN); 
-	v_cardsTypes.push_back(THREEJUNKO_ONE);
-	v_cardsTypes.push_back(THREE_ONE);
-	v_cardsTypes.push_back(SINGLEJUNKO);
-	v_cardsTypes.push_back(THREEJUNKO_TWO); 
-	v_cardsTypes.push_back(THREEJUNKO); 
-	 v_cardsTypes.push_back(THREE_TWO); 
-	v_cardsTypes.push_back(DUALJUNKO); 
-	v_cardsTypes.push_back(SANTIAO); 
-	v_cardsTypes.push_back(COUPLE); 
-	v_cardsTypes.push_back(SINGLE); 
-	v_cardsTypes.push_back(FOUR_TWO_COUPLE); 
-	combs.push_back(comb(p,v_cardsTypes));
-	v_cardsTypes.clear();
-	p.p3_cardsNum=cardsNum;
-	p.p3_allMoves=p3_moves;
-	memcpy(p.p3_EachCardNum,tmp_EachCardsNum,sizeof(p.p3_EachCardNum));
-	#pragma endregion
-
-		#pragma region 组合8
-	v_cardsTypes.push_back(ROCKET); 
-	v_cardsTypes.push_back(ZHADAN); 
-	v_cardsTypes.push_back(THREEJUNKO_ONE); 
-	v_cardsTypes.push_back(THREEJUNKO_TWO); 
-	v_cardsTypes.push_back(THREE_TWO); 
-	v_cardsTypes.push_back(THREE_ONE); 
-	v_cardsTypes.push_back(DUALJUNKO); 
-	v_cardsTypes.push_back(SINGLEJUNKO);
-	v_cardsTypes.push_back(THREEJUNKO); 
-	v_cardsTypes.push_back(SANTIAO); 
-	v_cardsTypes.push_back(FOUR_TWO); 
-	v_cardsTypes.push_back(FOUR_TWO_COUPLE); 
-	v_cardsTypes.push_back(COUPLE); 
-	v_cardsTypes.push_back(SINGLE); 
-	
-	combs.push_back(comb(p,v_cardsTypes));
-	v_cardsTypes.clear();
-	p.p3_cardsNum=cardsNum;
-	p.p3_allMoves=p3_moves;
-	memcpy(p.p3_EachCardNum,tmp_EachCardsNum,sizeof(p.p3_EachCardNum));
-	#pragma endregion
-	
-
-
-	FileWriter fw = FileWriter("comb.txt");
-	fw.CombsToFile(combs);
-
-	p.p3_combs.clear();
-	p.p3_combs=combs;
-}
-
-/**
-*	根据一种牌型优先级序列获得一种组合
-*   @v_cardsTypes  牌型优先级序列
-*/
-Comb CMoveGenerator::comb(Player p,vector<unsigned> v_cardsTypes)
-{
-	Comb comb;
-	
-	for(int i=0;i<v_cardsTypes.size();i++)
-	{
-		if(p.p3_IsExistCardsType[v_cardsTypes.at(i)-1])
-		{
-			combByCardsType(p,&comb,v_cardsTypes.at(i));
-		}
-	}
-	
-	return comb;
-}
-
-/**
-*	按指定牌型获取走步中指定牌型所有走步
-*   @cardsType 指定牌型
-*/
-void CMoveGenerator::combByCardsType(Player p,Comb *comb,int cardsType)
-{
-	for(int i=p.p3_allMoves.size()-1;i>=0;i--)
-	{
-		if(i>=0&&i<p.p3_allMoves.size()&&p.p3_allMoves.at(i).cardsType==cardsType)
-		{
-			comb->moves.push_back(p.p3_allMoves[i]);
-			for(size_t j=0;j<p.p3_allMoves[i].cards.size();j++)
-			{
-				p.p3_EachCardNum[p.p3_allMoves[i].cards[j]]--;
-			}
-			p.p3_cardsNum-=p.p3_allMoves[i].cards.size();
-			p.p3_allMoves=getMovesByMyself(p.p3_cardsNum,p.p3_EachCardNum);
-			if(p.p3_allMoves.size()>0&&cardsType!=ROCKET)
-			{
-				i=p.p3_allMoves.size();
-				continue;
-			}
-		}
-	}
-}
-
-void CMoveGenerator::initP3_IsExistCardsType(Player p)
-{
-	vector<CARDSMOVE> moves = p.p3_allMoves;
-
-	for(size_t i=0;i<moves.size();i++)
-	{
-		if(moves.at(i).cardsType==ROCKET)
-		{
-			p.p3_IsExistCardsType[ROCKET-1]=1;
-		}
-		else if(moves.at(i).cardsType==ZHADAN)
-		{
-			p.p3_IsExistCardsType[ZHADAN-1]=1;
-		}
-		else if(moves.at(i).cardsType==SINGLE)
-		{
-			p.p3_IsExistCardsType[SINGLE-1]=1;
-		}
-		else if(moves.at(i).cardsType==COUPLE)
-		{
-			p.p3_IsExistCardsType[COUPLE-1]=1;
-		}
-		else if(moves.at(i).cardsType==SANTIAO)
-		{
-			p.p3_IsExistCardsType[SANTIAO-1]=1;
-		}
-		else if(moves.at(i).cardsType==THREE_ONE)
-		{
-			p.p3_IsExistCardsType[THREE_ONE-1]=1;
-		}
-		else if(moves.at(i).cardsType==THREE_TWO)
-		{
-			p.p3_IsExistCardsType[THREE_TWO-1]=1;
-		}
-		else if(moves.at(i).cardsType==SINGLEJUNKO)
-		{
-			p.p3_IsExistCardsType[SINGLEJUNKO-1]=1;
-		}
-		else if(moves.at(i).cardsType==DUALJUNKO)
-		{
-			p.p3_IsExistCardsType[DUALJUNKO-1]=1;
-		}
-		else if(moves.at(i).cardsType==THREEJUNKO)
-		{
-			p.p3_IsExistCardsType[THREEJUNKO-1]=1;
-		}
-		else if(moves.at(i).cardsType==THREEJUNKO_ONE)
-		{
-			p.p3_IsExistCardsType[THREEJUNKO_ONE-1]=1;
-		}
-		else if(moves.at(i).cardsType==THREEJUNKO_TWO)
-		{
-			p.p3_IsExistCardsType[THREEJUNKO_TWO-1]=1;
-		}
-		else if(moves.at(i).cardsType==FOUR_TWO)
-		{
-			p.p3_IsExistCardsType[FOUR_TWO-1]=1;
-		}
-		else
-		{
-			p.p3_IsExistCardsType[FOUR_TWO_COUPLE-1]=1;
-		}
 	}
 }

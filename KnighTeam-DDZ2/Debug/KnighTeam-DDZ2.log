@@ -1,0 +1,26 @@
+﻿生成启动时间为 2015/8/15 11:37:19。
+     1>项目“E:\博弈实验室\二打一斗地主\KnighTeam-DDZ2\KnighTeam-DDZ2\KnighTeam-DDZ2.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         E:\360\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt AlphaBeta.cpp DDZMain.cpp DDZMoveManager.cpp DDZPlayer.cpp Eveluation.cpp MCSearch.cpp MoveGenerator.cpp SearchEngine.cpp SplitCards.cpp ThinkTable.cpp UCTSearch.cpp
+         SplitCards.cpp
+         MoveGenerator.cpp
+     1>MoveGenerator.cpp(1736): warning C4018: “<”: 有符号/无符号不匹配
+     1>MoveGenerator.cpp(1747): warning C4018: “<”: 有符号/无符号不匹配
+     1>MoveGenerator.cpp(1853): warning C4018: “<”: 有符号/无符号不匹配
+         正在生成代码...
+     1>e:\博弈实验室\二打一斗地主\knighteam-ddz2\knighteam-ddz2\splitcards.cpp(26): error C4716: “SplitCards::GetASplitMove”: 必须返回一个值
+         正在跳过...(未检测到相关更改)
+         UCTSearch.cpp
+         ThinkTable.cpp
+         SearchEngine.cpp
+         MCSearch.cpp
+         Eveluation.cpp
+         DDZPlayer.cpp
+         DDZMoveManager.cpp
+         DDZMain.cpp
+         AlphaBeta.cpp
+     1>已完成生成项目“E:\博弈实验室\二打一斗地主\KnighTeam-DDZ2\KnighTeam-DDZ2\KnighTeam-DDZ2.vcxproj”(Build 个目标)的操作 - 失败。
+
+生成失败。
+
+已用时间 00:00:02.37

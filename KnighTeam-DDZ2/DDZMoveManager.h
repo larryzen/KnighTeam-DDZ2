@@ -36,29 +36,36 @@ public:
 
 	vector<CARDSMOVE> getType14Four_Two_Couple(vector<CARDSMOVE> moves);
 
-	void setStatus(Player p,CARDSMOVE *move);
-	void setMovesStatus(Player p,vector<CARDSMOVE> *moves);
-	int getMoveValue(CARDSMOVE move);
 
-	int IsStatus1Max(Player p,CARDSMOVE move);
-	int IsStatus2Large(Player p,CARDSMOVE move);
-	int IsStatus3Mid(Player p,CARDSMOVE move);
-	int IsStatus4Small(Player p,CARDSMOVE move);
+	CARDSMOVE getMiniumMove(vector<CARDSMOVE> cms, int CardsType);
+
+	void setStatus(CARDSMOVE *move);
+	void setMovesStatus(vector<CARDSMOVE> *moves);
+	int getMoveValue(CARDSMOVE move);
+	bool canPlayOver(vector<CARDSMOVE> comb);
+	bool IsEqualsMove(CARDSMOVE m1, CARDSMOVE m2);
 
 	int IsRelateMove(CARDSMOVE move,int n);
 	int IsRelateMoves(vector<CARDSMOVE> moves,int n);
 
 
+
 	vector<CARDSMOVE> dealMoves(vector<CARDSMOVE> moves,unsigned *cards);
 	int getMaxScoreMove(vector<CARDSMOVE> moves);
-	vector<CARDSMOVE> getCombBySocre(Player p);
+	vector<CARDSMOVE> getCombBySocre();
 
 	vector<CARDSMOVE> getGoodMove3Single(vector<CARDSMOVE> moves,
-														vector<CARDSMOVE> single,unsigned *cards,int flag);
+												vector<CARDSMOVE> single,unsigned *cards,int flag);
 
 	vector<CARDSMOVE> getGoodMove4Couple(vector<CARDSMOVE> moves,
-														vector<CARDSMOVE> couple,unsigned *cards,int flag);
+												vector<CARDSMOVE> couple,unsigned *cards,int flag);
+
+	vector<CARDSMOVE> getGoodMove5Santiao(vector<CARDSMOVE> moves,
+												vector<CARDSMOVE> couple,unsigned *cards,int flag);
 private:
 	vector<CARDSMOVE> getMovesByType(vector<CARDSMOVE> moves,int type);
+	void JunkoFilter(vector<CARDSMOVE> *singleJunko, vector<CARDSMOVE> *dualJunko, vector<CARDSMOVE> *threeJunko,
+		 CARDSMOVE *singleJunkoMove, CARDSMOVE *dualJunkoMove,  CARDSMOVE *threeJunkoMove);
+	void removeCardMove(vector<CARDSMOVE> *moves, int index);
 };
 

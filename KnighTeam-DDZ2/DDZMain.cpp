@@ -7,6 +7,7 @@
 #include "string.h"
 #include "ThinkTable.h"
 #include "Player.h"
+#include "FileWriter.h"
 using namespace std;
 
 
@@ -18,20 +19,19 @@ using namespace std;
 **/
 int main()
 {
-	char D_Ver[200];    //协议版本
-
+	DDZPlayer player = DDZPlayer();
+	CThinkTable think = CThinkTable();
 	char cInMessage[200];   //输入通信内容
 	char cOutMessage[200];  //输出通信内容
 	char cShort[4];
-	DDZPlayer player;
-	CThinkTable think;
-	Player p;
-	
+
 	cin.getline(cInMessage,200);		//获取来自裁判系统的指令
 
 	
 	while(cInMessage[0]>='A')
 	{
+		/*FileWriter fw = FileWriter("order.txt");
+		fw.writeOrderFromFatherExe(cInMessage);*/
 		for(size_t i=0;i<3;i++)
 		{
 			cShort[i]=cInMessage[i];
@@ -40,46 +40,46 @@ int main()
 
 		if(strcmp(cShort,"DOU")==0)				//版本信息
 		{
-			player.CalName(cInMessage,D_Ver,cOutMessage);
-			cout<<cOutMessage<<endl;
+			player.CalName(cInMessage,cOutMessage);
+			cout<< cOutMessage<<endl;
 		}
 		if(strcmp(cShort,"INF")==0)					//轮局信息
 		{
+			player.initPlayer();
 			player.CalInfo(cInMessage,cOutMessage);
-			cout<<cOutMessage<<endl;
+			cout<< cOutMessage<<endl;
 		}
 		if(strcmp(cShort,"DEA")==0)					//牌套信息
 		{
-			player.CalDeal(cInMessage,cOutMessage,p);
-			player.initCardsInfo(p);
-			cout<<cOutMessage<<endl;
+			player.CalDeal(cInMessage,cOutMessage);
+			
+			cout<< cOutMessage<<endl;
 		}
 		if(strcmp(cShort,"BID")==0)					//叫牌过程
 		{
-			player.CalBid(cInMessage,cOutMessage,p);
+			player.CalBid(cInMessage,cOutMessage);
 			
-			cout<<cOutMessage<<endl;
+			cout<< cOutMessage<<endl;
 		}
 		if(strcmp(cShort,"LEF")==0)					//底牌信息
 		{
-			player.CalLeft(cInMessage,cOutMessage,p);
-			cout<<cOutMessage<<endl;
+			player.CalLeft(cInMessage,cOutMessage);
+			cout << cOutMessage<< endl;
 		}
 		if(strcmp(cShort,"PLA")==0)					//出牌过程
 		{
-			player.CalPla(cInMessage,cOutMessage,p);
-			cout<<cOutMessage<<endl;
+			player.CalPla(cInMessage,cOutMessage);
+			cout<< cOutMessage<<endl;
 		}
 		if(strcmp(cShort,"ERR")==0)
 		{
 			player.CalErr(cInMessage,cOutMessage);
-			cout<<cOutMessage<<endl;
+			cout<< cOutMessage<<endl;
 		}
 		if(strcmp(cShort,"GAM")==0)					//胜负信息
 		{
-			player.initPlayer(p);
 			player.CalGam(cInMessage,cOutMessage);
-			cout<<cOutMessage<<endl;
+			cout<< cOutMessage<<endl;
 		}
 
 		cin.getline(cInMessage,200);

@@ -12,11 +12,20 @@ class CThinkTable
 public:
 	CThinkTable();
 	~CThinkTable();
-	void initMyCards(int cards[20]);
-	int getBid(Player p);
-	void initCardsInfo(Player p);// 
-	void initEachCardNum(Player p);
+	int getBid();
+	
+	void initEachCardNum();
+	void updateEachCardNum(vector<unsigned> list, int flag);
+	static bool IsHalfGame();
+private:
+	void increaseEachCardNum(vector<unsigned> list);
+	void decreaseEachCardNum(vector<unsigned> list);
 
-	void getMyCardsInfo(Player p);
+	int getBidByComb(int combsNum);
+	int getBidByTopCards(unsigned *cards);
+	int getBidByCardsPoints(unsigned *cards);
+	void updateBidByTheirBid(int *bid);
+	void updateBidByCombsWithTopCards(int *bid, const int *level);
+	int getCurrentMaxBid();
 };
 

@@ -6,10 +6,13 @@
 using namespace std;
 
 #define MAX_Depth 120     //蒙特卡罗深度
-#define AlphaBeta_Depth 3 // α-β模拟深度
+#define AlphaBeta_Depth 9 // α-β模拟深度
 #define RANDTIME 100		   // 随机模拟次数
+#define UCT_Depth 800 // UCT模拟深度
 
+#define UCB_c 0.3
 
+#define HalfGame 7 //半场分界线
 #define PASS -1				// pass
 #define INVALID 0 			//无效牌型
 #define ROCKET 1			// 火箭
@@ -27,21 +30,36 @@ using namespace std;
 #define FOUR_TWO 13         // 四带二
 #define FOUR_TWO_COUPLE 14  // 四带两对
 
+#define TOTAL_KINDS 15 //总共牌种类
+
+#define J 8  //宏定义 J
+#define Q 9  //宏定义 Q
+#define K 10 //宏定义 K
+#define A 11 //宏定义 A
+#define T 12 //宏定义 2
+#define X 13 //宏定义 小王（XW)
+#define D 14 //宏定义 大王（DW)
+
 #define GET_ARRAY_LEN(array,len) {len = (sizeof(array) / sizeof(array[0]));}//获得数组长度
 
 #define STATUS_MAX 1		//  必胜牌
-#define STATUS_LARGE 2	//  大牌
+#define STATUS_LARGE 2		//  大牌
 #define STATUS_MID 3		//  中等牌
-#define STATUS_SMALL 4   //  小牌
+#define STATUS_SMALL 4		//  小牌
+
+
+#define FA_Single 4      //首攻单牌限定数量
+#define FA_Couple 4      //首攻对牌限定数量
+#define FA_Santiao 3      //首攻对牌限定数量
 
 // 设置空走步
 #define NULL_MOVE(move) \
 { \
-	vector<unsigned> list;\
-	move.cards=list;\
 	move.cardsType=-1;\
 	move.score=0;\
 }
+
+#define max(x, y) {x = x > y ? x : y;}
 
 
 
@@ -53,54 +71,25 @@ typedef struct _cardsmoves
 {
 	vector<unsigned> cards;
 	int cardsType;
+	int side;//出牌方
 	int status;	  // 状态
 	int outWay;// 出牌方式
 	int score;
+	int win;
+	int current_times;
+	double UCBValue;
 }CARDSMOVE;//走步
 
 typedef struct _comb
 {
 	vector<CARDSMOVE> moves;//一组走步
 	int score;
+	int singleNum;//组合中单牌数量
+	int coupleNum;//组合中对牌数量
+	int gain;     //收益
 }Comb;
 
 typedef vector<Comb> CombsLib;
 
-
-typedef struct _card
-{
-	int meihua;		 //  梅花
-	int fangkuai;	 //  方块
-	int hongtao;	 //  红桃
-	int heitao;      //  黑桃
-	int num;		 //  牌的数量
-	int value;		 //  牌面值
-}CARD;
-
-typedef struct _wang
-{
-	int small; // 小王
-	int big; // 大王
-	int num;//  牌的数量
-	int value;// 牌面值
-}WANG;
-
-typedef struct _cardsInfo
-{
-	CARD a; // 3
-	CARD b; // 4
-	CARD c; // 5
-	CARD d; // 6
-	CARD e; // 7
-	CARD f; // 8
-	CARD g; // 9
-	CARD h; // 10
-	CARD i; // J
-	CARD j; // Q
-	CARD k; // K
-	CARD l; // A
-	CARD m; // 2
-	WANG n; // 王
-}CardsInfo;
 
 #endif //define_h_

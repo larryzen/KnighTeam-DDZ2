@@ -30,7 +30,7 @@ vector<CARDSMOVE> Player::p1_general;
 
 double Player::p1_Membership[54]={0};
 
-unsigned Player::p1_EachCardNum[15]={0};
+unsigned Player::p1_EachCardNum[TOTAL_KINDS] = { 0 };
 
 int Player::p1_manyCards[14]={0};
 
@@ -59,7 +59,7 @@ vector<CARDSMOVE> Player::p2_general;
 
 double Player::p2_Membership[54]={0};
 
-unsigned Player::p2_EachCardNum[15]={0};
+unsigned Player::p2_EachCardNum[TOTAL_KINDS] = { 0 };
 
 int Player::p2_manyCards[14]={0};
 
@@ -82,19 +82,20 @@ vector<unsigned> Player::p3_cardsList;
 
 vector<CARDSMOVE> Player::p3_yiChu;
 
-CardsInfo Player::p3_cardsInfo;
+unsigned Player::p3_EachCardNum[TOTAL_KINDS] = { 0 };
 
-unsigned Player::p3_EachCardNum[15]={0};
+bool Player::p3_canPlayOver = false;
+
+vector<CARDSMOVE> Player::p3_comb;
 
 
 
 vector<CARDSMOVE> Player::p3_general;
 
-unsigned Player::remaining[15]={4, 4, 4, 4, 4,  4, 4, 4, 4, 4, 4, 4, 4, 1, 1};// 整副牌
+unsigned Player::remaining[TOTAL_KINDS] = { 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1 };// 整副牌
 
 vector<CARDSMOVE> Player::p3_allMoves;
 
-CombsLib Player::p3_combs;
 
 int Player::p3_IsExistCardsType[14]={0};
 
@@ -105,3 +106,9 @@ CARDSMOVE Player::firstMove;
 int Player::lastPlayer=-1;
 
 CARDSMOVE Player::lastMove;
+
+vector<CARDSMOVE> Player::cardsMoveRecords;
+
+unsigned Player::p1_EachCardAndRemaining[TOTAL_KINDS];	//存储除去p2手中一定存在的牌还剩余的牌
+
+unsigned Player::p2_EachCardAndRemaining[TOTAL_KINDS];	//存储除去p1手中一定存在的牌还剩余的牌
