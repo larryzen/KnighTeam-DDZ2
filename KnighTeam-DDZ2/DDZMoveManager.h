@@ -36,8 +36,10 @@ public:
 
 	vector<CARDSMOVE> getType14Four_Two_Couple(vector<CARDSMOVE> moves);
 
-
-	CARDSMOVE getMiniumMove(vector<CARDSMOVE> cms, int CardsType);
+	int getMinimumMoveIndex(vector<CARDSMOVE> cms, int CardsType);
+	int getMaximumMoveIndex(vector<CARDSMOVE> cms, int CardsType);
+	CARDSMOVE getMinimumMove(vector<CARDSMOVE> cms, int CardsType);
+	CARDSMOVE getMaximumMove(vector<CARDSMOVE> cms, int CardsType);
 
 	void setStatus(CARDSMOVE *move);
 	void setMovesStatus(vector<CARDSMOVE> *moves);

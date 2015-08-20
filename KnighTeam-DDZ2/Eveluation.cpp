@@ -2226,17 +2226,17 @@ CARDSMOVE CEveluation::firstAttack(vector<CARDSMOVE> moves)
 
 	if (singles.size() >= FA_Single)
 	{
-		return ddz_MM.getMiniumMove(singles, SINGLE);
+		return ddz_MM.getMinimumMove(singles, SINGLE);
 	}
 
 	if (couples.size() > FA_Couple)
 	{
-		return ddz_MM.getMiniumMove(couples, COUPLE);
+		return ddz_MM.getMinimumMove(couples, COUPLE);
 	}
 
 	if (santiaos.size() > FA_Santiao)
 	{
-		return ddz_MM.getMiniumMove(santiaos, SANTIAO);
+		return ddz_MM.getMinimumMove(santiaos, SANTIAO);
 	}
 
 	if (singleJunkos.size() > 0)

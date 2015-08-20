@@ -253,11 +253,11 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 	{
 		FirstMoves = moves;
 	}
-	if (Player::p3_cardsNum == 20)
+	/*if (Player::p3_cardsNum == 20)
 	{
 		bestMove = ddz_Eve->firstAttack(moves);
 		return 0;
-	}
+	}*/
 	int result = IsGameOver(nDepth);
 	if (result)
 	{
@@ -279,15 +279,18 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 
 	ddz_Eve->EveluateMoves(&moves, nDepth);
 
-	if (nDepth == 0)
+	if (nDepth ==0)
 	{
 		FirstMoves = moves;
 		for (size_t i = 0; i < moves.size(); i++)
 		{
 			MakeMove(moves[i], nDepth);
 
-			
-			SearchAGoodMove(nDepth + 1, i);
+			if (nDepth==0)
+				SearchAGoodMove(nDepth + 1, i);
+			else
+				SearchAGoodMove(nDepth + 1, nodeIndex);
+
 			UnMakeMove(moves[i], nDepth);
 		}
 		

@@ -12,7 +12,7 @@ using namespace std;
 
 #define UCB_c 0.3
 
-#define HalfGame 7 //半场分界线
+#define HalfGame 6 //半场分界线
 #define PASS -1				// pass
 #define INVALID 0 			//无效牌型
 #define ROCKET 1			// 火箭
@@ -55,7 +55,8 @@ using namespace std;
 // 设置空走步
 #define NULL_MOVE(move) \
 { \
-	move.cardsType=-1;\
+	move.cards =vector<unsigned>();\
+	move.cardsType= PASS;\
 	move.score=0;\
 }
 

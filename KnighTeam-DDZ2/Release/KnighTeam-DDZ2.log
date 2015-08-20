@@ -1,10 +1,64 @@
-﻿生成启动时间为 2015/8/14 18:47:51。
+﻿生成启动时间为 2015/8/17 20:34:54。
      1>项目“E:\博弈实验室\二打一斗地主\KnighTeam-DDZ2\KnighTeam-DDZ2\KnighTeam-DDZ2.vcxproj”在节点 2 上(Build 个目标)。
      1>ClCompile:
-         E:\360\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt AlphaBeta.cpp
+         E:\360\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt AlphaBeta.cpp DDZCombFactory.cpp DDZMain.cpp DDZMoveManager.cpp DDZPlayer.cpp Eveluation.cpp FileWriter.cpp MCSearch.cpp MoveGenerator.cpp Player.cpp PublicVar.cpp SearchEngine.cpp SplitCards.cpp ThinkTable.cpp UCTSearch.cpp
          AlphaBeta.cpp
-     1>AlphaBeta.cpp(355): warning C4018: “<”: 有符号/无符号不匹配
-     1>AlphaBeta.cpp(398): warning C4018: “<”: 有符号/无符号不匹配
+     1>AlphaBeta.cpp(367): warning C4018: “<”: 有符号/无符号不匹配
+     1>AlphaBeta.cpp(410): warning C4018: “<”: 有符号/无符号不匹配
+         DDZCombFactory.cpp
+     1>DDZCombFactory.cpp(349): warning C4018: “>=”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(375): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(433): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(483): warning C4018: “<=”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(558): warning C4018: “>”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(597): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(844): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(863): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(879): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(892): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(896): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(908): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZCombFactory.cpp(912): warning C4018: “<”: 有符号/无符号不匹配
+         DDZMain.cpp
+         DDZMoveManager.cpp
+     1>DDZMoveManager.cpp(118): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZMoveManager.cpp(158): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZMoveManager.cpp(172): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZMoveManager.cpp(616): warning C4018: “>=”: 有符号/无符号不匹配
+         DDZPlayer.cpp
+     1>DDZPlayer.cpp(592): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 E:\360\VC\include\string.h(195) : 参见“strncpy”的声明
+     1>DDZPlayer.cpp(733): warning C4018: “<”: 有符号/无符号不匹配
+     1>DDZPlayer.cpp(1590): warning C4018: “>”: 有符号/无符号不匹配
+         Eveluation.cpp
+     1>Eveluation.cpp(757): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+     1>Eveluation.cpp(832): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+     1>Eveluation.cpp(889): warning C4018: “>”: 有符号/无符号不匹配
+     1>Eveluation.cpp(1485): warning C4018: “<=”: 有符号/无符号不匹配
+     1>Eveluation.cpp(1514): warning C4018: “<=”: 有符号/无符号不匹配
+     1>Eveluation.cpp(1539): warning C4018: “<=”: 有符号/无符号不匹配
+     1>Eveluation.cpp(1560): warning C4018: “<=”: 有符号/无符号不匹配
+     1>Eveluation.cpp(1581): warning C4018: “<=”: 有符号/无符号不匹配
+     1>Eveluation.cpp(1743): warning C4018: “<”: 有符号/无符号不匹配
+     1>Eveluation.cpp(1843): warning C4018: “>=”: 有符号/无符号不匹配
+         FileWriter.cpp
+         MCSearch.cpp
+         MoveGenerator.cpp
+     1>MoveGenerator.cpp(1745): warning C4018: “<”: 有符号/无符号不匹配
+     1>MoveGenerator.cpp(1756): warning C4018: “<”: 有符号/无符号不匹配
+     1>MoveGenerator.cpp(1862): warning C4018: “<”: 有符号/无符号不匹配
+         Player.cpp
+         PublicVar.cpp
+         SearchEngine.cpp
+         SplitCards.cpp
+         ThinkTable.cpp
+         UCTSearch.cpp
+     1>UCTSearch.cpp(47): warning C4018: “<”: 有符号/无符号不匹配
+     1>UCTSearch.cpp(67): warning C4018: “<”: 有符号/无符号不匹配
+     1>UCTSearch.cpp(82): warning C4018: “<”: 有符号/无符号不匹配
+     1>UCTSearch.cpp(112): warning C4018: “<”: 有符号/无符号不匹配
+     1>UCTSearch.cpp(120): warning C4018: “<”: 有符号/无符号不匹配
+     1>UCTSearch.cpp(222): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
        Link:
          E:\360\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"E:\博弈实验室\二打一斗地主\KnighTeam-DDZ2\Release\KnighTeam-DDZ2.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"E:\博弈实验室\二打一斗地主\KnighTeam-DDZ2\Release\KnighTeam-DDZ2.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:\博弈实验室\二打一斗地主\KnighTeam-DDZ2\Release\KnighTeam-DDZ2.lib" /MACHINE:X86 /SAFESEH Release\AlphaBeta.obj
          Release\DDZCombFactory.obj
@@ -18,6 +72,7 @@
          Release\Player.obj
          Release\PublicVar.obj
          Release\SearchEngine.obj
+         Release\SplitCards.obj
          Release\stdafx.obj
          Release\StringUtil.obj
          Release\ThinkTable.obj
@@ -30,4 +85,4 @@
 
 生成成功。
 
-已用时间 00:00:03.44
+已用时间 00:00:28.06

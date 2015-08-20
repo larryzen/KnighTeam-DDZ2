@@ -96,17 +96,19 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 	if(IsCanGo)	// 主动出牌
 	{	
 		ddz_CF = DDZCombFactory(tmp_EachCardNum, cardsNum);
-		//moves = getMovesByMyself(cardsNum,tmp_EachCardNum);
 		Comb c1 = ddz_CF.getComb1LeastSingle();
-		Comb c2 = ddz_CF.getComb2LeastMoves();
-		Comb c3 = ddz_CF.getComb3MaxGain();
-		vector<CARDSMOVE> m1= ddz_CF.getComb2LeastMoves().moves;
-		vector<CARDSMOVE> m2 = ddz_CF.getComb3MaxGain().moves;
-		moves = ddz_CF.getComb1LeastSingle().moves;
+
+		moves = c1.moves;
 		ddz_CF.setCarryCards1(&moves);
 		ddz_CF.setCarryCards2(&moves);
 		ddz_CF.setCarryCards3(&moves);
 		ddz_CF.setCarryCards4(&moves);
+		if (CThinkTable::IsHalfGame())//终局模拟处理
+		{
+			FinalMovesDeal(&moves);
+		}
+		
+		
 		for (size_t j = 0; j<moves.size(); j++)
 		{
 			moves[j].outWay = 1;
@@ -115,7 +117,7 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 	}
 	else	   // 被动出牌(按其他玩家上一轮出牌走步)
 	{
-		if (0&&turn != 0 || CThinkTable::IsHalfGame())
+		if (turn != 0 || CThinkTable::IsHalfGame())
 		{
 			moves = (vector<CARDSMOVE>) getMovesByOthers(lastMove, tmp_EachCardNum);// 根据其他玩家牌获得我方手中所有走步
 			
@@ -138,6 +140,34 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 	}
 	
 	return moves;
+}
+
+void CMoveGenerator::FinalMovesDeal(vector<CARDSMOVE> *moves)
+{
+	int cardsType = INVALID;
+	CARDSMOVE m;
+	for (int i = moves->size() - 1; i >= 0; i--)
+	{
+		cardsType = moves->at(i).cardsType;
+		if (cardsType == COUPLE || cardsType == SANTIAO)
+		{
+			m = CARDSMOVE();
+			m.cards.push_back(moves->at(i).cards[0]);
+			m.cardsType = SINGLE;
+
+			moves->push_back(m);
+
+			if (cardsType == SANTIAO)
+			{
+				m = CARDSMOVE();
+				m.cards.push_back(moves->at(i).cards[0]);
+				m.cards.push_back(moves->at(i).cards[0]);
+				m.cardsType = COUPLE;
+
+				moves->push_back(m);
+			}
+		}
+	}
 }
 
 vector<CARDSMOVE> CMoveGenerator::getMovesByCombMovesForOneMove(CARDSMOVE key, vector<CARDSMOVE> moves)

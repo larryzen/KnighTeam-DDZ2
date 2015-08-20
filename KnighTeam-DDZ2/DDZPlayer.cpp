@@ -13,6 +13,7 @@
 #include "MCSearch.h"
 #include "AlphaBeta.h"
 #include "UCTSearch.h"
+#include "SplitCards.h"
 
 
 using namespace std;
@@ -554,6 +555,18 @@ void DDZPlayer:: CalPla(char *cInMessage,char *cOutMessage)
 
 			ddz_SE->SearchAGoodMove(0);//获得最佳走步
 			bestMove = ddz_SE->bestMove;
+
+			if (bestMove.cardsType == PASS)//若搜索引擎未搜到走步
+			{
+				//则进行必要的拆牌处理
+				if (Player::p1_IsLandlord || (Player::p3_IsLandlord 
+				&& (Player::lastMove.cardsType == SINGLE || Player::lastMove.cardsType == COUPLE)))
+				{
+					SplitCards ddz_SC = SplitCards(Player::p3_EachCardNum);
+					bestMove = ddz_SC.GetASplitMove(Player::lastMove);
+				}
+					
+			}
 
 	
 			Player::cardsMoveRecords.push_back(bestMove);

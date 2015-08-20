@@ -5,7 +5,7 @@ class SplitCards
 public:
 	SplitCards();
 	~SplitCards();
-	SplitCards(unsigned int *cards, vector<CARDSMOVE> moves);
+	SplitCards(unsigned int *cards);
 
 	CARDSMOVE GetASplitMove(CARDSMOVE lastMove);
 private:

@@ -86,36 +86,86 @@ vector<CARDSMOVE> DDZMoveManager::getType14Four_Two_Couple(vector<CARDSMOVE> mov
 /*
 *	获得走步集合中某一类走步的最小值
 */
-CARDSMOVE DDZMoveManager::getMiniumMove(vector<CARDSMOVE> cms, int CardsType)
+CARDSMOVE DDZMoveManager::getMinimumMove(vector<CARDSMOVE> cms, int CardsType)
 {
-	CARDSMOVE m ;
-	
-	if (cms.size() == 0 || CardsType == PASS)
+	CARDSMOVE m = CARDSMOVE();;
+	int i = getMinimumMoveIndex(cms, CardsType);
+	if (i == -1)
 	{
 		NULL_MOVE(m);
-		return m;
 	}
+	else
+	{
+		m = cms[i];
+	}
+
+	return m;
 	
+	
+}
+
+int DDZMoveManager::getMinimumMoveIndex(vector<CARDSMOVE> cms, int CardsType)
+{
 	int index = -1;
-	int currentValue = 15;
+
+	if (cms.size() == 0 || CardsType == PASS)
+	{
+		return index;
+	}
+
+	
+	unsigned currentValue = 15;
 	for (int i = 0; i < cms.size(); i++)
 	{
-		if (CardsType==cms[i].cardsType && cms[i].cards[0] < currentValue)
+		if (CardsType == cms[i].cardsType && cms[i].cards[0] < currentValue)
 		{
 			currentValue = cms[i].cards[0];
-			index =i;
+			index = i;
 		}
 	}
 
-	if (index == -1)
-	{
-		NULL_MOVE(m);
-		return m;
-	}
-		
-	return cms[index];
+	return index;
 }
 
+
+CARDSMOVE DDZMoveManager::getMaximumMove(vector<CARDSMOVE> cms, int CardsType)
+{
+	CARDSMOVE m= CARDSMOVE();;
+
+	int i = getMaximumMoveIndex(cms, CardsType);
+	if (i == -1)
+	{
+		NULL_MOVE(m);
+	}
+	else
+	{
+		m = cms[i];
+	}
+
+	return m;
+}
+
+int DDZMoveManager::getMaximumMoveIndex(vector<CARDSMOVE> cms, int CardsType)
+{
+	int index = -1;
+
+	if (cms.size() == 0 || CardsType == PASS)
+	{
+		return index;
+	}
+
+	unsigned currentValue = 0;
+	for (int i = 0; i < cms.size(); i++)
+	{
+		if (CardsType == cms[i].cardsType && cms[i].cards[0] >= currentValue)
+		{
+			currentValue = cms[i].cards[0];
+			index = i;
+		}
+	}
+
+	return index;
+}
 vector<CARDSMOVE> DDZMoveManager::getMovesByType(vector<CARDSMOVE> moves,int type)
 {
 	vector<CARDSMOVE> thisTypeMoves;

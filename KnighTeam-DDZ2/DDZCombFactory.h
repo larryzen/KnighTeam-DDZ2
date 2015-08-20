@@ -42,7 +42,7 @@ public:
 		int getLeastJunkoNum(int nJunko);
 		int getCardsTypeByNJunko(int nJunko);
 		int getCardsTypeByBasicCards(int cardsNum);
-		void getBasicTypeComb(unsigned *cards, int start, int end);
+		void getBasicTypeComb(unsigned *cards, int start, int end, int cardsNum);
 
 		bool IsCorrect(Comb comb, int cardsNum);
 		bool IsContainsCardsMove(vector<CARDSMOVE> cms, CARDSMOVE cm);
@@ -59,5 +59,6 @@ public:
 		int compareSingleNum(Comb cb1, Comb cb2);
 		int compareMovesNum(Comb cb1, Comb cb2);
 		int compareGain(Comb cb1, Comb cb2);
+		int compare(int n1, int n2);
 };
 
