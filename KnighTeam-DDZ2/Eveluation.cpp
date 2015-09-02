@@ -128,34 +128,88 @@ void CEveluation::UpdateByPlayCards(int whoseGo,int cardsType,vector<unsigned> p
 	case SINGLE:
 		{
 			unsigned singleValue = playCards.at(0);
-			for (size_t i = 4 * singleValue; i<4 * singleValue + 4; i++)
+			if (singleValue == X)
 			{
-				if(whoseGo==1)
+				if (whoseGo == 1)
 				{
-					if(Player::p1_Membership[i]!=0)
+					if (Player::p1_Membership[D] != 0)
 					{
-						Player::p1_Membership[i] -= 0.1;
+						Player::p1_Membership[D]-=0.1;
 					}
-
-					if(Player::p2_Membership[i]!=0)
+					if (Player::p2_Membership[D] != 0)
 					{
-						Player::p2_Membership[i] += 0.1;
+						Player::p2_Membership[D]+=0.1;
 					}
-
 				}
-				else if(whoseGo==2)
+				else if (whoseGo == 2)
 				{
-					if(Player::p1_Membership[i]!=0)
+					if (Player::p1_Membership[D] != 0)
 					{
-						Player::p1_Membership[i] += 0.1;
+						Player::p1_Membership[D] += 0.1;
 					}
-
-					if(Player::p2_Membership[i]!=0)
+					if (Player::p2_Membership[D] != 0)
 					{
-						Player::p2_Membership[i] -= 0.1;
+						Player::p2_Membership[D] -= 0.1;
 					}
 				}
 			}
+			else if (singleValue == D)
+			{
+				if (whoseGo == 1)
+				{
+					if (Player::p1_Membership[X] != 0)
+					{
+						Player::p1_Membership[X] -= 0.1;
+					}
+					if (Player::p2_Membership[X] != 0)
+					{
+						Player::p2_Membership[X] += 0.1;
+					}
+				}
+				else if (whoseGo == 2)
+				{
+					if (Player::p1_Membership[X] != 0)
+					{
+						Player::p1_Membership[X] += 0.1;
+					}
+					if (Player::p2_Membership[X] != 0)
+					{
+						Player::p2_Membership[X] -= 0.1;
+					}
+				}
+			}
+			else
+			{
+				for (size_t i = 4 * singleValue; i<4 * singleValue + 4; i++)
+				{
+					if (whoseGo == 1)
+					{
+						if (Player::p1_Membership[i] != 0)
+						{
+							Player::p1_Membership[i] -= 0.1;
+						}
+
+						if (Player::p2_Membership[i] != 0)
+						{
+							Player::p2_Membership[i] += 0.1;
+						}
+
+					}
+					else if (whoseGo == 2)
+					{
+						if (Player::p1_Membership[i] != 0)
+						{
+							Player::p1_Membership[i] += 0.1;
+						}
+
+						if (Player::p2_Membership[i] != 0)
+						{
+							Player::p2_Membership[i] -= 0.1;
+						}
+					}
+				}
+			}
+			
 			break;
 		}
 	case COUPLE:
@@ -833,53 +887,65 @@ void CEveluation::PositiveSimulatedMenu()
 	
 	//初始化玩家1、2牌面，全清零进行模拟
 	init_p1_p2_EachCardNum(); 
-
 	int p1_cardsNum = Player::p1_cardsNum;
 	int p2_cardsNum = Player::p2_cardsNum;
-	
-	unsigned remaining[15];
-	memcpy(remaining, Player::remaining, sizeof(remaining));
-	double gailv = 0.5;
+	unsigned remaining[15]={ 0 };
+	memcpy(remaining, Player::remaining, sizeof(Player::remaining));
+	int randNum = 0;
 	for (int i = 0; i < 54; i++)
 	{
-		if (Player::p1_Membership[i] > gailv)// 依次取概率大于0.5的作为玩家1手中牌
+		int value = getValue(i);
+		if (Player::p1_Membership[i] > 0.5 && p1_cardsNum > 0 && remaining[value]>0)
 		{
-			handleMoreThanHalf(i, &p1_cardsNum, remaining, 1);
+			Player::p1_EachCardNum[value]++;
+			p1_cardsNum--;
+			remaining[value]--;
 		}
-	}
-	for (int i = 0; i < 54; i++)
-	{
-		if (Player::p2_Membership[i] > gailv)// 依次取概率大于0.5的作为玩家2手中牌
+		else if (Player::p1_Membership[i] < 0.5 && Player::p1_Membership[i] > 0 
+				 && p2_cardsNum > 0 && remaining[value]>0)
 		{
-			handleMoreThanHalf(i, &p2_cardsNum, remaining, 2);
+			Player::p2_EachCardNum[value]++;
+			p2_cardsNum--;
+			remaining[value]--;
 		}
-	}
-	while (p1_cardsNum && gailv > 0)
-	{
-		gailv -= 0.1;
-		for (int i = 0; i < 54; i++)
+		else if (Player::p1_Membership[i] == 0.5)
 		{
-			if (Player::p1_Membership[i] > gailv)// 依次取概率的大的作为玩家1手中牌
+			randNum = rand() % 2;
+
+			if (randNum)
 			{
-				handleMoreThanHalf(i, &p1_cardsNum, remaining, 1);
+				if (p1_cardsNum && remaining[value]>0)
+				{
+					Player::p1_EachCardNum[value]++;
+					p1_cardsNum--;
+					remaining[value]--;
+				}
+				else if (p2_cardsNum && remaining[value]>0)
+				{
+					Player::p2_EachCardNum[value]++;
+					p2_cardsNum--;
+					remaining[value]--;
+				}
+				
+			}
+			else
+			{
+				if (p2_cardsNum && remaining[value]>0)
+				{
+					Player::p2_EachCardNum[value]++;
+					p2_cardsNum--;
+					remaining[value]--;
+				}
+				else if (p1_cardsNum && remaining[value]>0)
+				{
+					Player::p1_EachCardNum[value]++;
+					p1_cardsNum--;
+					remaining[value]--;
+				}
 			}
 		}
-		
 	}
-	gailv = 0.5;
-	while (p2_cardsNum && gailv > 0)
-	{
-		gailv -= 0.1;
-		for (int i = 0; i < 54; i++)
-		{
-			if (Player::p2_Membership[i] > gailv)// 依次取概率的大的作为玩家1手中牌
-			{
-				handleMoreThanHalf(i, &p2_cardsNum, remaining, 2);
-			}
-		}
-		
-	}
-	
+
 	if (p1_cardsNum)
 	{
 		for (size_t j = 0; j<15; j++)
@@ -909,7 +975,130 @@ void CEveluation::PositiveSimulatedMenu()
 			Player::p2_EachCardNum[j] += remaining[j];//玩家2差的牌等于剩余牌
 		}
 	}
+
+	//int p1_cardsNum = Player::p1_cardsNum;
+	//int p2_cardsNum = Player::p2_cardsNum;
+	//
+	//unsigned remaining[15];
+	//memcpy(remaining, Player::remaining, sizeof(remaining));
+	//double gailv = 0.5;
+	//for (int i = 0; i < 54; i++)
+	//{
+	//	if (Player::p1_Membership[i] > gailv)// 依次取概率大于0.5的作为玩家1手中牌
+	//	{
+	//		handleMoreThanHalf(i, &p1_cardsNum, remaining, 1);
+	//	}
+	//}
+	//for (int i = 0; i < 54; i++)
+	//{
+	//	if (Player::p2_Membership[i] > gailv)// 依次取概率大于0.5的作为玩家2手中牌
+	//	{
+	//		handleMoreThanHalf(i, &p2_cardsNum, remaining, 2);
+	//	}
+	//}
+	//while (p1_cardsNum && gailv > 0)
+	//{
+	//	gailv -= 0.1;
+	//	for (int i = 0; i < 54; i++)
+	//	{
+	//		if (Player::p1_Membership[i] > gailv)// 依次取概率的大的作为玩家1手中牌
+	//		{
+	//			handleMoreThanHalf(i, &p1_cardsNum, remaining, 1);
+	//		}
+	//	}
+	//	
+	//}
+
+	//gailv = 0.5;
+	//while (p2_cardsNum && gailv > 0)
+	//{
+	//	gailv -= 0.1;
+	//	for (int i = 0; i < 54; i++)
+	//	{
+	//		if (Player::p2_Membership[i] > gailv)// 依次取概率的大的作为玩家1手中牌
+	//		{
+	//			handleMoreThanHalf(i, &p2_cardsNum, remaining, 2);
+	//		}
+	//	}
+	//	
+	//}
 	
+
+	//int index = 0;
+	//int count = 0;//只随机三轮，防止出现死循环
+	//double randNum;
+	//while (p1_cardsNum && count < 1)
+	//{
+	//	if (index > 53)
+	//	{
+	//		index = 0;
+	//		count++;
+	//		break;
+	//	}
+	//	if (Player::p1_Membership[index] > 0.5 || Player::p1_Membership[index]<=0)
+	//	{
+	//		index++;//大于0.5的已经被模拟，直接跳过,等于零不模拟
+	//	}
+	//	else
+	//	{
+	//		randNum = (double)(rand() % 100) / 100.00;
+	//		handleNotMoreThanHalf(index, randNum, &p1_cardsNum, remaining, 1);
+	//		index++;
+	//	}
+	//}
+
+	//index = 0;
+	//count = 0;//只随机三轮，防止出现死循环
+	//while (p2_cardsNum && count < 1)
+	//{
+	//	if (index > 53)
+	//	{
+	//		index = 0;
+	//		count++;
+	//		break;
+	//	}
+	//	if (Player::p2_Membership[index] > 0.5 || Player::p2_Membership[index] <= 0)
+	//	{
+	//		index++;//大于0.5的已经被模拟，直接跳过,等于零不模拟
+	//	}
+	//	else
+	//	{
+	//		randNum = (double)(rand() % 100) / 100.00;
+	//		handleNotMoreThanHalf(index, randNum, &p2_cardsNum, remaining, 1);
+	//		index++;
+	//	}
+	//}
+	//
+	//if (p1_cardsNum)
+	//{
+	//	for (size_t j = 0; j<15; j++)
+	//	{
+	//		if (remaining[j] > 0)
+	//		{
+	//			if (p1_cardsNum > remaining[j])
+	//			{
+	//				Player::p1_EachCardNum[j] += remaining[j];
+	//				p1_cardsNum-= remaining[j];
+	//				remaining[j]=0;
+	//			}	
+	//			else
+	//			{
+	//				Player::p1_EachCardNum[j] += p1_cardsNum;
+	//				remaining[j]-=p1_cardsNum;
+	//				p1_cardsNum = 0;
+	//			}
+	//		}
+	//	}
+	//}
+
+	//if (p2_cardsNum)
+	//{
+	//	for (size_t j = 0; j<15; j++)
+	//	{
+	//		Player::p2_EachCardNum[j] += remaining[j];//玩家2差的牌等于剩余牌
+	//	}
+	//}
+	//
 	
 	
 	//for (int i = 0; i < 54; i++)
@@ -1053,63 +1242,7 @@ void CEveluation::init_p1_p2_EachCardNum()
 	}
 }
 
-vector<int> CEveluation::ComputeNumOfBasic(int *cards)
-{
-	vector<int> tmp_vector;
 
-	int single=0;
-	int couple=0;
-	int threeTiao=0;
-
-	int tmp_cards[15];
-	memcpy(tmp_cards,cards,sizeof(tmp_cards));
-
-	for(size_t i=0;i<13;i++)//3->A、2
-	{
-		if(tmp_cards[i]==1)
-		{
-			single++;
-		}
-		else if(tmp_cards[i]==2)
-		{
-			couple++;
-		}
-		else if(tmp_cards[i]==3)
-		{
-			threeTiao++;
-		}
-	}
-
-	if(tmp_cards[13]==1&&tmp_cards[14]==0)
-	{
-		single++;
-	}
-	if(tmp_cards[13]==0&&tmp_cards[14]==1)
-	{
-		single++;
-	}
-
-	tmp_vector.push_back(single);
-	tmp_vector.push_back(couple);
-	tmp_vector.push_back(threeTiao);
-
-	return tmp_vector;
-}
-//
-//int getMaxIndexOfBasic(vector<int> vector)
-//{
-//	int maxIndex=0;
-//
-//	for(size_t i=1;i<vector.size();i++)
-//	{
-//		if(vector.at(i)>vector.at(i-1))
-//		{
-//			maxIndex=i;
-//		}
-//	}
-//
-//	return maxIndex+1;
-//}
 
 /*    AI Pass策略   */
 int CEveluation::IsAiPass()
@@ -1211,7 +1344,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 	int cardsType = move->cardsType;
 	vector<unsigned> current_cards = move->cards;
 	int currentValue; // 当前走步牌面值
-	int currentCardsNum; //当前玩家手中牌数量
+	int currentCardsNum, nextCardsNum, frontCardsNum; //当前玩家手中牌数量
 	
 	
 	
@@ -1237,6 +1370,9 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		current_IsLandlord=Player::p3_IsLandlord;
 		next_IsLandlord=Player::p1_IsLandlord;
 		front_IsLandLord=Player::p2_IsLandlord;
+
+		nextCardsNum = Player::p1_cardsNum;
+		frontCardsNum = Player::p2_cardsNum;
 	}
 	else if(turn == 2)
 	{
@@ -1247,6 +1383,9 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		current_IsLandlord=Player::p1_IsLandlord;
 		next_IsLandlord=Player::p2_IsLandlord;
 		front_IsLandLord=Player::p3_IsLandlord;
+
+		nextCardsNum = Player::p3_cardsNum;
+		frontCardsNum = Player::p1_cardsNum;
 	}
 	else
 	{
@@ -1257,16 +1396,26 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		current_IsLandlord=Player::p2_IsLandlord;
 		next_IsLandlord=Player::p3_IsLandlord;
 		front_IsLandLord=Player::p1_IsLandlord;
+
+		nextCardsNum = Player::p2_cardsNum;
+		frontCardsNum = Player::p3_cardsNum;
 	}
 
-	
+	if (outWay)
+	{
+		if (currentValue >= Q)
+		{
+			score-=10000;
+		}
+	}
 	
 	if ((IsCardOriginator(turn) || (!current_IsLandlord && !next_IsLandlord)) 
 			&& cardsType != PASS)
 	{
 		score += (D - current_cards[0]) * 10;//自己主动出牌发起者，尽量走最小
 	}
-	else if (!IsCardOriginator(turn) && next_IsLandlord && cardsType != PASS)
+	else if (!IsCardOriginator(turn) && next_IsLandlord 
+			&& cardsType != PASS && Player::lastPlayer == 1)//敌方主动出牌，且我方为顶家
 	{
 		switch (currentValue)//顶牌
 		{
@@ -1302,7 +1451,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		}
 	}
 
-
+	
 	if (currentCardsNum == current_cards.size())//非四带牌的能一手走完就走完
 	{
 		if (cardsType != FOUR_TWO || cardsType != FOUR_TWO_COUPLE)
@@ -1311,6 +1460,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		}
 	}
 
+	
 
 	switch (cardsType)
 	{
@@ -1319,13 +1469,18 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 				 int canGetRight = GetCardsRightIfPass();
 				 if (canGetRight == 1)//pass获得牌权
 				 {
-					score+=10000;
+					score+=1000;
 				 }
 				 else if (canGetRight == -1)
 				 {
 					score-=100;
 				 }
 
+
+				 if (!IsCurrentTeam(current_IsLandlord, Player::lastPlayer))
+				 {
+					score-=10000;
+				 }
 				 if (Player::p1_IsLandlord)
 				 {
 					 if (Player::p1_cardsNum == 1 || Player::p1_cardsNum == 2)
@@ -1352,85 +1507,90 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			}
 		case ROCKET:
 		{
-				   if (Player::p3_cardsNum == 2)
-				   {
-						score+=9999;
-				   }
-					score-=1000;
+			score-=15000;
 			break;
 		}
 		
 
 		case ZHADAN:
 		{
-				   if (Player::p3_cardsNum == 2)
-				   {
-					   score += 9999;
-				   }
-					score-=1000;
-					int hisZhaDanValue = play->getZhaDanValue(current_cards);// 获取炸弹的牌面值
-					int myZhaDanValue = play->getZhaDanValue(current_cards);// 获取炸弹的牌面值
-					if (move->status == STATUS_MAX && Player::p3_canPlayOver)
-					{
-						score += 9999;
-					}
+					score-=15000;
+					
 					break;
 		}
 
 		case SINGLE:
 			{
-					   if (Player::p1_IsLandlord)
+					   if (current_IsLandlord)
 					   {
-						   if (Player::p1_cardsNum == 1)
+						   if (nextCardsNum == 1 || frontCardsNum == 1)
 						   {
-								score-=200;
-						   }
-						   else if (Player::p2_cardsNum == 1)
-						   {
-								score+=200;
+								score-=15000;
 						   }
 					   }
-					   else  if (Player::p2_IsLandlord)
+					   else
 					   {
-						   if (Player::p2_cardsNum == 1)
+						   if (next_IsLandlord)
 						   {
-							   score -= 200;
+							   if (nextCardsNum == 1)
+							   {
+								   score -= 15000;
+							   }
+							   if (frontCardsNum == 1)
+							   {
+								   score += 500;
+							   }
 						   }
-						   else if (Player::p1_cardsNum == 1)
+						   else
 						   {
-							   score += 200;
+							   if (nextCardsNum == 1)
+							   {
+								   score += 500;
+							   }
+							   if (frontCardsNum == 1)
+							   {
+								   score -= 15000;
+							   }
 						   }
 					   }
-				int SingleValue = play->getSingleValue(current_cards);
-				score+=20;
+					score+=20;
 			break;
 		}
 
 	case COUPLE:
 		{
-				   if (Player::p1_IsLandlord)
+				   if (current_IsLandlord)
 				   {
-					   if (Player::p1_cardsNum == 2)
+					   if (nextCardsNum == 2 || frontCardsNum == 2)
 					   {
-						   score -= 200;
-					   }
-					   else if (Player::p2_cardsNum == 2)
-					   {
-						   score += 200;
+						   score -= 15000;
 					   }
 				   }
-				   else  if (Player::p2_IsLandlord)
+				   else
 				   {
-					   if (Player::p2_cardsNum == 2)
+					   if (next_IsLandlord)
 					   {
-						   score -= 200;
+						   if (nextCardsNum == 2)
+						   {
+							   score -= 15000;
+						   }
+						   if (frontCardsNum == 2)
+						   {
+							   score += 500;
+						   }
 					   }
-					   else if (Player::p1_cardsNum == 2)
+					   else
 					   {
-						   score += 200;
+						   if (nextCardsNum == 2)
+						   {
+							   score += 500;
+						   }
+						   if (frontCardsNum == 2)
+						   {
+							   score -= 15000;
+						   }
 					   }
 				   }
-			int coupleValue =play->getCoupleValue(current_cards);
 			score += 10;
 			break;
 		}
@@ -1439,7 +1599,10 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		{
 			int threeTiaoValue=play->getSanTiaoValue(current_cards);
 			score+=5;
-
+			if (currentValue == T)
+			{
+				score-=800;
+			}
 			break;
 		}
 
@@ -1452,9 +1615,11 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			{
 				score+=30;
 			}
-			else if(tmp_cards[threeTiaoValue]==4)
+			
+
+			if (currentValue == T)
 			{
-				score-=60;
+				score -= 800;
 			}
 		}
 		break;
@@ -1469,9 +1634,10 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			{
 				score+=30;
 			}
-			else if(tmp_cards[threeTiaoValue]==4)
+			
+			if (currentValue == T)
 			{
-				score-=60;
+				score -= 800;
 			}
 		}
 		break;
@@ -1482,25 +1648,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			int startValue = cardsInfo.at(0);
 			int endValue = cardsInfo.at(1);
 
-			for(unsigned i =startValue;i<=endValue;i++)
-			{
-				if(tmp_cards[i]==1)
-				{
-					score+=20;
-				}
-				else if(tmp_cards[i]==2)
-				{
-					score-=10;
-				}
-				else if(tmp_cards[i]==3)
-				{
-					score-=20;
-				}
-				else if(tmp_cards[i]==4)
-				{
-					score-=60;
-				}
-			}
+			score += ((endValue - startValue + 1) * 30);//优先出长的单顺
 		}
 		break;
 
@@ -1509,23 +1657,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			vector<unsigned> cardsInfo = play->getDualJunkoValue(current_cards);
 			int startValue = cardsInfo.at(0);
 			int endValue = cardsInfo.at(1);
-			//int junkoNum = endValue-startValue;
-
-			for(unsigned i =startValue;i<=endValue;i++)
-			{
-				if(tmp_cards[i]==2)
-				{
-					score+=15;
-				}
-				else if(tmp_cards[i]==3)
-				{
-					score-=20;
-				}
-				else if(tmp_cards[i]==4)
-				{
-					score-=60;
-				}
-			}
+			score += (endValue - startValue + 1) * 20;
 		}
 		break;
 
@@ -1534,19 +1666,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			vector<unsigned> cardsInfo = play->getThree_ShunValue(current_cards);
 			int startValue = cardsInfo.at(0);
 			int endValue = cardsInfo.at(1);
-			//int junkoNum = endValue-startValue;
-
-			for(unsigned i =startValue;i<=endValue;i++)
-			{
-				if(tmp_cards[i]==3)
-				{
-					score+=30;
-				}
-				else if(tmp_cards[i]==4)
-				{
-					score-=60;
-				}
-			}
+			score += (endValue-startValue + 1)* 10;
 		}
 		break;
 
@@ -1557,17 +1677,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			int endValue = cardsInfo.at(1);
 			int junkoNum = endValue-startValue+1;
 			
-			for(unsigned i =startValue;i<=endValue;i++)
-			{
-				if(tmp_cards[i]==3)
-				{
-					score+=40;
-				}
-				else if(tmp_cards[i]==4)
-				{
-					score-=200;
-				}
-			}
+			score += (endValue - startValue + 1) * 15;
 		}
 		break;
 
@@ -1578,17 +1688,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			int endValue = cardsInfo.at(1);
 			int junkoNum = endValue-startValue+1;
 			 
-			for(unsigned i =startValue;i<=endValue;i++)
-			{
-				if(tmp_cards[i]==3)
-				{
-					score+=40;
-				}
-				else if(tmp_cards[i]==4)
-				{
-					score-=200;
-				}
-			}
+			score += (endValue - startValue + 1) * 12;
 		}
 		break;
 

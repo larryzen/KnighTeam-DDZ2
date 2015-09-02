@@ -100,7 +100,6 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 
 		moves = c1.moves;
 		ddz_CF.setCarryCards1(&moves);
-		ddz_CF.setCarryCards2(&moves);
 		ddz_CF.setCarryCards3(&moves);
 		ddz_CF.setCarryCards4(&moves);
 		if (CThinkTable::IsHalfGame())//终局模拟处理
@@ -108,6 +107,7 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 			FinalMovesDeal(&moves);
 		}
 		
+	
 		
 		for (size_t j = 0; j<moves.size(); j++)
 		{
@@ -117,31 +117,102 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 	}
 	else	   // 被动出牌(按其他玩家上一轮出牌走步)
 	{
-		if (turn != 0 || CThinkTable::IsHalfGame())
-		{
-			moves = (vector<CARDSMOVE>) getMovesByOthers(lastMove, tmp_EachCardNum);// 根据其他玩家牌获得我方手中所有走步
+		
+		ddz_CF = DDZCombFactory(tmp_EachCardNum, cardsNum);
+		vector<CARDSMOVE> tmp_moves = ddz_CF.getComb1LeastSingle().moves;
+		GeneralSplitDeal(&tmp_moves, tmp_EachCardNum);
+		ddz_CF.setCarryCards1(&tmp_moves);
+		ddz_CF.setCarryCards3(&tmp_moves);
+		ddz_CF.setCarryCards4(&tmp_moves);
+		moves = getMovesByCombMovesForOneMove(lastMove, tmp_moves);
 			
-		}
-		else
-		{
-			ddz_CF = DDZCombFactory(tmp_EachCardNum, cardsNum);
-			vector<CARDSMOVE> tmp_moves = ddz_CF.getComb1LeastSingle().moves;
-			moves = getMovesByCombMovesForOneMove(lastMove, tmp_moves);
-			/*if (moves.size()==1 && Player::p1_IsLandlord)
-			{
-				moves = getMovesByOthers(lastMove,tmp_EachCardNum);
-			}*/
-		}
 		for (size_t j = 0; j<moves.size(); j++)
 		{
 			moves.at(j).outWay = 0;
 			moves[j].side = turn;
 		}
 	}
-	
 	return moves;
 }
 
+/**
+*	比较常见的拆牌处理
+*
+*/
+void CMoveGenerator::GeneralSplitDeal(vector<CARDSMOVE> *moves, unsigned *EachCardsNum)
+{
+	int cardsType = INVALID;
+	CARDSMOVE m;
+	int key_single = -1;
+	int top = D;
+	while (!EachCardsNum[top])
+	{
+		top--;
+	}
+	for (int i = moves->size() - 1; i >= 0; i--)
+	{
+		cardsType = moves->at(i).cardsType;
+		// 拆火箭
+		if (cardsType == ROCKET)
+		{
+			m = CARDSMOVE();
+			VectorUtil::addElement(&m.cards, X, 1);
+			m.cardsType = SINGLE;
+			moves->push_back(m);
+
+			m = CARDSMOVE();
+			VectorUtil::addElement(&m.cards, D, 1);
+			m.cardsType = SINGLE;
+			moves->push_back(m);
+		}
+
+		if ((cardsType == COUPLE || cardsType == SANTIAO) && moves->at(i).cards[0] == top)
+		{
+			m = CARDSMOVE();
+			VectorUtil::addElement(&m.cards, top, 1);
+			m.cardsType = SINGLE;
+
+			moves->push_back(m);
+
+			if (cardsType == SANTIAO)
+			{
+				m = CARDSMOVE();
+				VectorUtil::addElement(&m.cards, top, 2);
+
+				m.cardsType = COUPLE;
+
+				moves->push_back(m);
+			}
+		}
+		//将2 的对牌，三条, 炸弹拆开
+		if ((cardsType == COUPLE || cardsType == SANTIAO || cardsType==ZHADAN) && moves->at(i).cards[0]==T)
+		{
+			m = CARDSMOVE();
+			VectorUtil::addElement(&m.cards, moves->at(i).cards[0], 1);
+			m.cardsType = SINGLE;
+
+			moves->push_back(m);
+
+			if (cardsType == SANTIAO)
+			{
+				m = CARDSMOVE();
+				VectorUtil::addElement(&m.cards, moves->at(i).cards[0], 2);
+				
+				m.cardsType = COUPLE;
+
+				moves->push_back(m);
+			}
+
+			if (cardsType == ZHADAN)
+			{
+				m = CARDSMOVE();
+				VectorUtil::addElement(&m.cards, moves->at(i).cards[0], 3);
+				m.cardsType = SANTIAO;
+				moves->push_back(m);
+			}
+		}
+	}
+}
 void CMoveGenerator::FinalMovesDeal(vector<CARDSMOVE> *moves)
 {
 	int cardsType = INVALID;
@@ -173,20 +244,11 @@ void CMoveGenerator::FinalMovesDeal(vector<CARDSMOVE> *moves)
 vector<CARDSMOVE> CMoveGenerator::getMovesByCombMovesForOneMove(CARDSMOVE key, vector<CARDSMOVE> moves)
 {
 	vector<CARDSMOVE> keyMoves = vector<CARDSMOVE>();
-	if (key.cardsType==THREE_ONE)
-		DDZCombFactory().setCarryCards1(&moves);
-	else if (key.cardsType == THREE_TWO)
-		DDZCombFactory().setCarryCards2(&moves);
-	else if (key.cardsType == THREEJUNKO_TWO)
-		DDZCombFactory().setCarryCards3(&moves);
-	else if (key.cardsType == THREEJUNKO_TWO)
-		DDZCombFactory().setCarryCards4(&moves);
 	for (size_t i = 0; i < moves.size(); i++)
 	{
 		if (IsValidMove(key, moves[i]))
 		{
 			moves[i].outWay=0;
-			moves[i].side = 0;
 			keyMoves.push_back(moves[i]);
 		}
 			
@@ -1630,11 +1692,12 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByType06Three_One(unsigned Three_OneCa
 				if(tmp_cards[j]>=1&&j!=i) // 查找手中数量大于等于1的牌型，作为带牌
 				{
 					tmp_vector.cards.push_back(j);	
+					tmp_vector.cardsType = 6;// 在走步后面追加牌型，三带单牌型为6
+					Three_OneCards_moves.push_back(tmp_vector);
 					break;
 				}
 			}
-			tmp_vector.cardsType=6;// 在走步后面追加牌型，三带单牌型为6
-			Three_OneCards_moves.push_back(tmp_vector);
+			
 		}
 	}
 
@@ -1662,12 +1725,11 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByType07Three_Two(unsigned Three_TwoCa
 				{
 					tmp_vector.cards.push_back(j);	
 					tmp_vector.cards.push_back(j);
+					tmp_vector.cardsType = 7;// 在走步后面追加牌型，三带双牌型为7
+					Three_TwoCards_moves.push_back(tmp_vector);
 					break;
 				}
-			}
-
-			tmp_vector.cardsType=7;// 在走步后面追加牌型，三带双牌型为7
-			Three_TwoCards_moves.push_back(tmp_vector);
+			}			
 		}
 	}
 
@@ -2038,6 +2100,10 @@ bool CMoveGenerator::IsValidMove(CARDSMOVE m1,CARDSMOVE m2)
 
 	if(cardsType1==cardsType2)
 	{
+		if (cards1.size() != cards2.size())
+		{
+			return false;
+		}
 		switch(cardsType1)
 		{
 		case INVALID:
@@ -2121,6 +2187,10 @@ bool CMoveGenerator::IsValidMove(CARDSMOVE m1,CARDSMOVE m2)
 		}
 		case THREE_TWO:
 		{
+						  if (cards1.size() != cards2.size())
+						  {
+							  return false;
+						  }
 						  vector<unsigned> cardsInfo1 = play->getThree_TwoValue(cards1);
 						  vector<unsigned> cardsInfo2 = play->getThree_TwoValue(cards2);
 						  return cardsInfo1.at(0)<cardsInfo2.at(0);
@@ -2137,6 +2207,7 @@ bool CMoveGenerator::IsValidMove(CARDSMOVE m1,CARDSMOVE m2)
 		
 		case DUALJUNKO:
 			{
+						  
 					vector<unsigned> cardsInfo1=play->getDualJunkoValue(cards1);
 					vector<unsigned> cardsInfo2=play->getDualJunkoValue(cards2);
 					

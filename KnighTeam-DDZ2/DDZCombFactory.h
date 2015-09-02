@@ -25,6 +25,8 @@ public:
 	void setCarryCards2(vector<CARDSMOVE> *moves);
 	void setCarryCards3(vector<CARDSMOVE> *moves);
 	void setCarryCards4(vector<CARDSMOVE> *moves);
+
+	void setCarryCards1_1(vector<CARDSMOVE> *moves);
 	private:
 		bool flag[13][13];//优化单顺递归查找，动态规划的思想
 		unsigned comb_cards[15];
@@ -53,6 +55,7 @@ public:
 		void quickSort(int *arr, int first, int last, int len);
 		
 		void setSingleNum(Comb *comb);
+		void setSantiaoNum(Comb *comb);
 		void setGain(Comb *cb);
 
 		int compareSingle(CARDSMOVE single1, CARDSMOVE single2);

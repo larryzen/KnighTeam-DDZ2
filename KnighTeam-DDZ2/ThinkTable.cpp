@@ -453,14 +453,15 @@ int CThinkTable::getCurrentMaxBid()
 
 bool CThinkTable::IsHalfGame()
 {
-	if ((Player::p1_cardsNum + Player::p2_cardsNum + Player::p3_cardsNum) / 3 < HalfGame)
-	{
-		return true;
-	}
-	/*if (Player::p1_cardsNum < HalfGame || Player::p2_cardsNum < HalfGame || Player::p3_cardsNum < HalfGame)
+	/*if (Player::p1_cardsNum < HalfGame || Player::p2_cardsNum < HalfGame || Player::p3_cardsNum)
 	{
 		return true;
 	}*/
+
+	if ((Player::p1_cardsNum +Player::p2_cardsNum+ Player::p3_cardsNum)/3 < HalfGame)
+	{
+		return true;
+	}
 
 	return false;
 }

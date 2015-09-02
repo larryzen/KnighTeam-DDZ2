@@ -36,7 +36,7 @@ public:
 private:
 	vector<CARDSMOVE> getMovesByCombMovesForOneMove(CARDSMOVE key, vector<CARDSMOVE> moves);
 	void FinalMovesDeal(vector<CARDSMOVE> *moves);
-
+	void GeneralSplitDeal(vector<CARDSMOVE> *moves,  unsigned *EachCardsNum);
 	bool HaveSingleJunko(unsigned start, unsigned JunkoNum, unsigned *cards);
 	bool HaveDualJunko(unsigned start, unsigned JunkoNum, unsigned *cards);
 	bool HaveThreeJunko(unsigned start, unsigned JunkoNum, unsigned *cards);

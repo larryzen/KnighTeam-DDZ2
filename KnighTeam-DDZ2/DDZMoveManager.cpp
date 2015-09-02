@@ -103,7 +103,9 @@ CARDSMOVE DDZMoveManager::getMinimumMove(vector<CARDSMOVE> cms, int CardsType)
 	
 	
 }
-
+/**
+*	获取某牌型的最小值下标
+*/
 int DDZMoveManager::getMinimumMoveIndex(vector<CARDSMOVE> cms, int CardsType)
 {
 	int index = -1;
@@ -496,13 +498,25 @@ void DDZMoveManager::setMovesStatus(vector<CARDSMOVE> *moves)
 void DDZMoveManager::setStatus(CARDSMOVE *move)
 {
 	CMoveGenerator ddz_MG = CMoveGenerator();
-	vector<CARDSMOVE> moves = ddz_MG.getMovesByOthers(*move,Player::remaining);
+	
 
-	if(moves.size()==0)
+	vector<CARDSMOVE> moves = ddz_MG.getMovesByOthers(*move, Player::remaining);
+	
+
+	if(moves.size() == 1)//只有pass的走步
 	{
 		move->status=STATUS_MAX;
 		return ;
 	}
+
+	/*
+	vector<CARDSMOVE> moves1 = ddz_MG.getMovesByOthers(*move, Player::p1_EachCardNum);
+	vector<CARDSMOVE> moves2 = ddz_MG.getMovesByOthers(*move, Player::p2_EachCardNum);
+	if (moves1.size() == 1 && moves2.size() == 1)
+	{
+		move->status = STATUS_LARGE;
+		return;
+	}*/
 
 	int value= getMoveValue(*move);
 

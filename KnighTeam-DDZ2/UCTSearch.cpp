@@ -12,6 +12,7 @@ UCTSearch::UCTSearch()
 	bestMove = CARDSMOVE();
 	ddz_MG = CMoveGenerator();
 	ddz_Eve = CEveluation();
+	cpy_cardsMoveRecords = vector<CARDSMOVE>();
 }
 
 
@@ -22,6 +23,8 @@ UCTSearch::~UCTSearch()
 int UCTSearch::SearchAGoodMove(int nDepth)
 {
 	SearchAGoodMove(nDepth, -1);
+
+
 	int currentIndex = getMaxUCBValue();
 	while (currentIndex != -1)
 	{

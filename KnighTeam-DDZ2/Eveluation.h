@@ -26,7 +26,6 @@ public:
 	void NegativeSimulatedMenu();// 悲观模拟随机菜单
 	void PositiveSimulatedMenu();//乐观模拟菜单
 
-	vector<int> ComputeNumOfBasic(int *cards);
 	int EveluateMove(CARDSMOVE* move,int whoseGo);
 	void EveluateMoves(vector<CARDSMOVE> *moves, int whoseGo);
 
@@ -68,5 +67,5 @@ private:
 	inline int getValue(int i);
 	inline bool IsCardOriginator(int turn);
 
-
+	
 };

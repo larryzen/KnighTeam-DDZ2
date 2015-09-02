@@ -9,10 +9,16 @@ using namespace std;
 #define AlphaBeta_Depth 9 // α-β模拟深度
 #define RANDTIME 100		   // 随机模拟次数
 #define UCT_Depth 800 // UCT模拟深度
+#define START_UCT 0
+#define UCB_c 0.8
 
-#define UCB_c 0.3
+#define BestMoveLinkListLen 80//最佳走步链表长度
 
-#define HalfGame 6 //半场分界线
+#define AlphaBetaTime 12
+
+#define HalfGame 7 // 半场分界线
+
+#define RESTCARDS 2 // 敌方剩余多少牌必拆
 #define PASS -1				// pass
 #define INVALID 0 			//无效牌型
 #define ROCKET 1			// 火箭
@@ -79,15 +85,17 @@ typedef struct _cardsmoves
 	int win;
 	int current_times;
 	double UCBValue;
+	int Count;
 }CARDSMOVE;//走步
 
 typedef struct _comb
 {
 	vector<CARDSMOVE> moves;//一组走步
 	int score;
-	int singleNum;//组合中单牌数量
-	int coupleNum;//组合中对牌数量
-	int gain;     //收益
+	int singleNum;  //组合中单牌数量
+	int coupleNum;  //组合中对牌数量
+	int santiaoNum; //组合中三条数量
+	int gain;       //收益
 }Comb;
 
 typedef vector<Comb> CombsLib;

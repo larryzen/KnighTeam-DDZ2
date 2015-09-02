@@ -22,7 +22,7 @@ private:
 
 
 		double cpyP1_membership[54], cpyP2_membership[54];
-		vector<CARDSMOVE> cpy_cardsMoveRecords = vector<CARDSMOVE>();
+		vector<CARDSMOVE> cpy_cardsMoveRecords;
 		unsigned cpyP1_EachCardNum[TOTAL_KINDS];
 		unsigned cpyP2_EachCardNum[TOTAL_KINDS];
 		unsigned cpyP3_EachCardNum[TOTAL_KINDS];

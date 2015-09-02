@@ -68,11 +68,14 @@ void DDZCombFactory::getCombLeastSingle(unsigned *cards, int *cardsNum)
 				int junkoLength = end - start + 1;
 				int len = comb.moves.size();
 				int tmp_cardsNum = (*cardsNum);
+				int tmp_cards[15];
+				memcpy(tmp_cards, cards, sizeof(tmp_cards));
 				if (junkoLength >= 5)
 				{
 					
 					getBasicTypeComb(cards, start, end, tmp_cardsNum);
 					removeMove(&comb.moves, len, comb.moves.size());
+					memcpy(cards, tmp_cards, sizeof(tmp_cards));
 					canMakeByJunko(cards, start, end,  cardsNum, 1);
 					
 
@@ -82,6 +85,7 @@ void DDZCombFactory::getCombLeastSingle(unsigned *cards, int *cardsNum)
 					
 					getBasicTypeComb(cards, start, end, tmp_cardsNum);
 					removeMove(&comb.moves, len, comb.moves.size());
+					memcpy(cards, tmp_cards, sizeof(tmp_cards));
 					canMakeByJunko(cards, start, end, cardsNum, 2);
 					
 
@@ -90,6 +94,7 @@ void DDZCombFactory::getCombLeastSingle(unsigned *cards, int *cardsNum)
 				{
 					getBasicTypeComb(cards, start, end, tmp_cardsNum);
 					removeMove(&comb.moves, len, comb.moves.size());
+					memcpy(cards, tmp_cards, sizeof(tmp_cards));
 					canMakeByJunko(cards, start, end, cardsNum, 3);
 					
 				}
@@ -486,11 +491,15 @@ void DDZCombFactory::getBasicTypeComb(unsigned *cards, int start, int end, int c
 		CARDSMOVE move = CARDSMOVE();
 		VectorUtil::addElement(&move.cards, i, cards[i]);
 		move.cardsType = getCardsTypeByBasicCards(cards[i]);
+		cardsNum -= cards[i];
+		cards[i]=0;
 		if (move.cardsType != INVALID)
 		{		
 			comb.moves.push_back(move);
 		}
 	}
+
+	getCombLeastSingle(cards, &cardsNum);
 
 	
 	
@@ -511,7 +520,8 @@ Comb DDZCombFactory::getComb1LeastSingle()
 	{
 		setSingleNum(&combsSingle.at(i));
 		setGain(&combsSingle.at(i));
-		int singleNum = combsSingle.at(i).singleNum - combsSingle.at(i).gain * 2;
+		setSantiaoNum(&combsSingle.at(i));
+		int singleNum = combsSingle.at(i).singleNum - combsSingle.at(i).gain * 2 - combsSingle.at(i).santiaoNum;
 		//取最少单牌组合
 		if (compare(currentSingleNum, singleNum) > 0)
 		{
@@ -523,7 +533,7 @@ Comb DDZCombFactory::getComb1LeastSingle()
 			//若单牌数量相等，则取收益大的
 			if (compare(combsSingle[index].gain, combsSingle[i].gain) < 0)
 			{
-				currentSingleNum = combsSingle.at(i).singleNum;
+				currentSingleNum = singleNum;
 				index = i;
 			}
 			else if (compare(combsSingle[index].gain, combsSingle[i].gain) == 0)
@@ -531,18 +541,25 @@ Comb DDZCombFactory::getComb1LeastSingle()
 				int movesSize1 = combsSingle[index].moves.size() - combsSingle[index].gain * 2;
 				int movesSize2 = combsSingle[i].moves.size() - combsSingle[i].gain * 2;
 				// 若收益相等，则取组合步数少的
-				if (compare(movesSize1, movesSize2) > 0)
+				if (compare(movesSize1, movesSize2) >= 0)
 				{
-					currentSingleNum = combsSingle.at(i).singleNum;
+					currentSingleNum = singleNum;
 					index = i;
 				}
 			}		
 		}
 	}
+	Comb comb;
 	if (index == -1)
-		return Comb();
-
-	return combsSingle[index];
+	{
+		comb = Comb();
+	}
+	else
+	{
+		comb = combsSingle[index];
+		
+	}
+	return comb;
 }
 
 /**
@@ -731,6 +748,7 @@ void DDZCombFactory::setSingleNum(Comb *s_comb)
 	int singleCount = 0;
 
 	vector<int> coupleMoves = vector<int>();//存储对牌牌面值
+	vector<int> santiaos = vector<int>();
 	
 	for (int i = s_comb->moves.size() - 1; i >= 0; i--)
 	{
@@ -745,6 +763,11 @@ void DDZCombFactory::setSingleNum(Comb *s_comb)
 			coupleMoves.push_back(s_comb->moves.at(i).cards[0]);
 			removeMove(&s_comb->moves, i);
 		}
+		else if (s_comb->moves.at(i).cardsType == SANTIAO)
+		{
+			santiaos.push_back(s_comb->moves.at(i).cards[0]);
+			removeMove(&s_comb->moves, i);
+		}
 	}
 	quickSort(singleMoves, 0, singleCount - 1, singleCount);
 	if (coupleMoves.size() > 0)
@@ -752,9 +775,18 @@ void DDZCombFactory::setSingleNum(Comb *s_comb)
 		quickSort(&coupleMoves[0], 0, coupleMoves.size() - 1, coupleMoves.size());
 	}
 
+	if (santiaos.size() > 0)
+	{
+		quickSort(&santiaos[0], 0, santiaos.size() - 1, santiaos.size());
+	}
+
 	
 	for (int i = coupleMoves.size()-1; i >=0 && !coupleMoves.empty(); i--)
 	{
+		if (coupleMoves[i] >= T)
+		{
+			continue;
+		}
 		int distance = 1;
 		int j=i-1;
 		while (j >=0 && (coupleMoves[i] - coupleMoves[j] == distance))
@@ -763,7 +795,7 @@ void DDZCombFactory::setSingleNum(Comb *s_comb)
 			j--;
 		}
 		
-		if (distance >= 3 && coupleMoves[j+1]<=7)//双顺起点小于J组成双顺
+		if (distance >= 3)//双顺起点小于J组成双顺
 		{
 			CARDSMOVE move = CARDSMOVE();
 			for (int k = j+1; k <= i; k++)
@@ -777,6 +809,37 @@ void DDZCombFactory::setSingleNum(Comb *s_comb)
 			coupleMoves.erase(it+(j+1), it+(i+1));
 		}
 		i = j+1;
+	}
+
+	for (int i = santiaos.size() - 1; i >= 0 && !santiaos.empty(); i--)
+	{
+		if (santiaos[i] >= T)
+		{
+			continue;
+		}
+		int distance = 1;
+		int j = i - 1;
+		while (j >= 0 && (santiaos[i] - santiaos[j] == distance))
+		{
+			distance++;
+			j--;
+		}
+
+		if (distance >= 2)//双顺起点小于J组成双顺
+		{
+			CARDSMOVE move = CARDSMOVE();
+			for (int k = j + 1; k <= i; k++)
+			{
+				move.cards.push_back(santiaos[k]);
+				move.cards.push_back(santiaos[k]);
+				move.cards.push_back(santiaos[k]);
+			}
+			move.cardsType = THREEJUNKO;
+			s_comb->moves.push_back(move);
+			vector<int>::iterator it = santiaos.begin();
+			santiaos.erase(it + (j + 1), it + (i + 1));
+		}
+		i = j + 1;
 	}
 	int singleCarryCardsNum = 0;
 	int coupleCarryCardsNum = 0;
@@ -860,7 +923,32 @@ void DDZCombFactory::setSingleNum(Comb *s_comb)
 		s_comb->moves.push_back(move);
 	}
 
+	for (int i = 0; i < santiaos.size(); i++)
+	{
+		CARDSMOVE move = CARDSMOVE();
+		move.cards.push_back(santiaos[i]);
+		move.cards.push_back(santiaos[i]);
+		move.cards.push_back(santiaos[i]);
+		move.cardsType = SANTIAO;
 
+		s_comb->moves.push_back(move);
+	}
+
+}
+
+void DDZCombFactory::setSantiaoNum(Comb *comb)
+{
+	DDZMoveManager ddz_MM = DDZMoveManager();
+	int threeJunkoSize = 0;
+	int santiaoSize = ddz_MM.getType5Santiao(comb->moves).size();
+	vector<CARDSMOVE> threeJunkoes = ddz_MM.getType10ThreeJunko(comb->moves);
+
+	for (int i = threeJunkoes.size() - 1; i >= 0; i--)
+	{
+		threeJunkoSize += (threeJunkoes[i].cards.size() / 3);
+	}
+
+	comb->santiaoNum = santiaoSize + threeJunkoSize ;//三条数量 = 三个的数量 + 三顺的数量
 }
 
 /*
@@ -868,50 +956,156 @@ void DDZCombFactory::setSingleNum(Comb *s_comb)
 */
 void DDZCombFactory::setCarryCards1(vector<CARDSMOVE> *moves)
 {
-	CARDSMOVE m = DDZMoveManager().getMinimumMove(*moves, SINGLE);
-	for (int i = 0; i < moves->size(); i++)
+	CARDSMOVE m1 = DDZMoveManager().getMinimumMove(*moves, SINGLE);
+	CARDSMOVE m2 = DDZMoveManager().getMinimumMove(*moves, COUPLE);
+	int size = moves->size();
+	for (int i = size - 1; i >= 0; i--)
 	{
-		if (moves->at(i).cardsType == SANTIAO && m.cardsType != PASS 
-				&& moves->at(i).cards[0]!=m.cards[0])
+		if (moves->at(i).cardsType == SANTIAO)
 		{
-			VectorUtil::addElement(&moves->at(i).cards, m.cards[0],1);
-			moves->at(i).cardsType = THREE_ONE;
+
+			CARDSMOVE newMove = moves->at(i);
+			//没有单牌，拆对牌来带
+			if (m1.cardsType == PASS && m2.cardsType != PASS && newMove.cards[0]!=m2.cards[0])
+			{
+				VectorUtil::addElement(&newMove.cards, m2.cards[0], 1);
+				newMove.cardsType = THREE_ONE;
+				moves->push_back(newMove);
+			}
+
+			CARDSMOVE newMove1 = moves->at(i);
+			//有单牌，带最小的单牌
+			if (m1.cardsType != PASS && newMove1.cards[0] != m1.cards[0] && m1.cards[0] <= T)
+			{
+				VectorUtil::addElement(&newMove1.cards, m1.cards[0], 1);
+				newMove1.cardsType = THREE_ONE;
+				moves->push_back(newMove1);
+			}
+		
+
+
+			CARDSMOVE newMove2 = moves->at(i);
+			//有对牌，带最小的对牌
+			if (m2.cardsType != PASS && newMove2.cards[0] != m2.cards[0] && m2.cards[0]<=A)
+			{
+				VectorUtil::addElement(&newMove2.cards, m2.cards[0], 2);
+				newMove2.cardsType = THREE_TWO;
+				moves->push_back(newMove2);
+			}
 		}
 	}
 }
+
+
+
 /*
-*	三条添加为三带双
+*	三条添加为三带单
 */
-void DDZCombFactory::setCarryCards2(vector<CARDSMOVE> *moves)
+void DDZCombFactory::setCarryCards1_1(vector<CARDSMOVE> *moves)
 {
-	CARDSMOVE m = DDZMoveManager().getMinimumMove(*moves, COUPLE);
-	for (int i = 0; i < moves->size(); i++)
+	for (int i = 0; i<moves->size(); i++)
 	{
-		if (moves->at(i).cardsType == SANTIAO && m.cardsType != PASS 
-				&& moves->at(i).cards[0] != m.cards[0])
+		if (moves->at(i).cardsType == SANTIAO)
 		{
-			VectorUtil::addElement(&moves->at(i).cards, m.cards[0], 2);
-			moves->at(i).cardsType = THREE_TWO;
+			int index1 = DDZMoveManager().getMinimumMoveIndex(*moves, SINGLE);
+			int index2 = DDZMoveManager().getMinimumMoveIndex(*moves, COUPLE);
+			
+			int key = -1;
+			CARDSMOVE cm1, cm2;
+			if (index1 != -1)
+			{
+				cm1 = moves->at(index1);
+				if (index2 != -1)
+				{			
+					cm2 = moves->at(index1);
+					if (cm1.cards[0] <= cm2.cards[0])//带小的单牌
+					{
+						VectorUtil::addElement(&moves->at(i).cards, cm1.cards[0], 1);
+						moves->at(i).cardsType = THREE_ONE;
+						key=index1;
+						i = 0;
+					}
+					else
+					{
+						VectorUtil::addElement(&moves->at(i).cards, cm2.cards[0], 2);
+						moves->at(i).cardsType = THREE_TWO;
+						key = index2;
+						i = 0;
+					}
+				}
+				else
+				{
+					VectorUtil::addElement(&moves->at(i).cards, cm1.cards[0], 1);
+					moves->at(i).cardsType = THREE_ONE;
+					key = index1;
+					i = 0;
+				}
+			}
+			else
+			{
+				if (index2 != -1)
+				{
+					cm2 = moves->at(index2);
+					VectorUtil::addElement(&moves->at(i).cards, cm2.cards[0], 2);
+					moves->at(i).cardsType = THREE_TWO;
+					key = index2;
+					i = 0;
+				}
+			}
+
+			if (key != -1)
+			{
+				vector<CARDSMOVE>::iterator it = moves->begin() + key;
+				moves->erase(it);
+			}
+			
 		}
 	}
 }
+
+// 三顺带单牌
 void DDZCombFactory::setCarryCards3(vector<CARDSMOVE> *moves)
 {
 	vector<CARDSMOVE> singles = DDZMoveManager().getType3Single(*moves);
 	for (int i = 0; i < moves->size(); i++)
 	{
-		if (moves->at(i).cardsType == THREEJUNKO && singles.size()>(moves->at(i).cards.size()/3))
+		
+		if (moves->at(i).cardsType == THREEJUNKO)
 		{
 			int junkoNum = moves->at(i).cards.size() / 3;
-			for (int j = 0; j < junkoNum; j++)
+			if (singles.size()>=(moves->at(i).cards.size() / 3))
 			{
-				VectorUtil::addElement(&moves->at(i).cards, singles[j].cards[0], 1);
+				
+				for (int j = 0; j < junkoNum; j++)
+				{
+					VectorUtil::addElement(&moves->at(i).cards, singles[j].cards[0], 1);
+				}
+
+				moves->at(i).cardsType = THREEJUNKO_ONE;
+			}
+			else//单牌不够带，则带对牌
+			{
+				vector<CARDSMOVE> couples = DDZMoveManager().getType4Couple(*moves);
+				int size = couples.size();
+				if (size == 0)
+				{
+					continue;
+				}
+				else if (junkoNum == size * 2)
+				{
+					for (int j = 0; j < size; j++)
+					{
+						VectorUtil::addElement(&moves->at(i).cards, couples[j].cards[0], 2);
+					}
+					moves->at(i).cardsType = THREEJUNKO_ONE;
+				}
 			}
 			
-			moves->at(i).cardsType = THREEJUNKO_ONE;
 		}
 	}
 }
+
+// 三顺带对牌
 void DDZCombFactory::setCarryCards4(vector<CARDSMOVE> *moves)
 {
 	vector<CARDSMOVE> couples = DDZMoveManager().getType4Couple(*moves);

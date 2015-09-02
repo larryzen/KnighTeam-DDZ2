@@ -10,7 +10,6 @@ public:
 	int SearchAGoodMove(int nDepth);
 	//vector<int> SearchAGoodMove(Player p);
 	int SearchAGoodMove();
-	int PassivePlay(vector<CARDSMOVE> moves);
 
 	int score;
 	int currentScore;
@@ -18,7 +17,6 @@ public:
 	int junkoNum;
 
 private:
-	int someoneLastOne(vector<CARDSMOVE> moves);
 	
 	int IsFinal();
 	bool IsFinal1LastOne();
@@ -28,6 +26,13 @@ private:
 	int SearchAGoodMove(int nDepth, int nodeIndex);
 	vector<CARDSMOVE> FirstMoves;
 	int	getMaxScoreIndex(vector<CARDSMOVE> moves);
+	int BestMoveLinkList[BestMoveLinkListLen];
+
+	void initBestMoveLinkList();
+	int getMaxTimesBestMove();
+
+	long start;
+	long end;
 
 };
 

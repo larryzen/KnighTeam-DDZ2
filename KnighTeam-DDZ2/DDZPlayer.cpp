@@ -543,7 +543,7 @@ void DDZPlayer:: CalPla(char *cInMessage,char *cOutMessage)
 
 			CSearchEngine *ddz_SE;
 			
-			if (think->IsHalfGame())
+			if (think->IsHalfGame() && START_UCT)
 			{
 				ddz_SE = new UCTSearch();
 			}
@@ -556,16 +556,40 @@ void DDZPlayer:: CalPla(char *cInMessage,char *cOutMessage)
 			ddz_SE->SearchAGoodMove(0);//获得最佳走步
 			bestMove = ddz_SE->bestMove;
 
-			if (bestMove.cardsType == PASS)//若搜索引擎未搜到走步
+			if (0 &&bestMove.cardsType == PASS)//若搜索引擎未搜到走步
 			{
+				SplitCards ddz_SC = SplitCards(Player::p3_EachCardNum);
 				//则进行必要的拆牌处理
 				if (Player::p1_IsLandlord || (Player::p3_IsLandlord 
 				&& (Player::lastMove.cardsType == SINGLE || Player::lastMove.cardsType == COUPLE)))
 				{
-					SplitCards ddz_SC = SplitCards(Player::p3_EachCardNum);
-					bestMove = ddz_SC.GetASplitMove(Player::lastMove);
-				}
 					
+					bestMove = ddz_SC.GetASplitMove(Player::lastMove, false);
+				}
+				
+				
+				if (Player::p1_IsLandlord)
+				{
+					if (Player::p1_cardsNum <= RESTCARDS && Player::lastPlayer == 1)
+					{
+						bestMove = ddz_SC.GetASplitMove(Player::lastMove, true);
+					}
+				}
+				else if (Player::p2_IsLandlord)
+				{
+					if (Player::p2_cardsNum <= RESTCARDS && Player::lastPlayer == 2)
+					{
+						bestMove = ddz_SC.GetASplitMove(Player::lastMove, true);
+					}
+				}
+				else if (Player::p3_IsLandlord)
+				{
+					if (Player::p1_cardsNum <= RESTCARDS || Player::p2_cardsNum <= RESTCARDS)
+					{
+						bestMove = ddz_SC.GetASplitMove(Player::lastMove, true);
+						
+					}
+				}
 			}
 
 	

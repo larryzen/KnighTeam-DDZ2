@@ -23,8 +23,15 @@ public:
 	int IsGameOver(int nDepth);
 	virtual int SearchAGoodMove(int nDepth)=0;// 在子类中实现
 	CARDSMOVE bestMove;
+
+	bool CanWin(vector<CARDSMOVE> FirstMoves, int outWay);
 //	virtual vector<int> SearchAGoodMove(Player p);
 
-	
+
+private:
+	int gain();
+	int Spring(int turn);
+	int ReSpring(int turn);
+	int GetAllGain(int turn);
 };
 
