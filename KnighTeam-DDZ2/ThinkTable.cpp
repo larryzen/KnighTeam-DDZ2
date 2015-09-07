@@ -1,8 +1,7 @@
 #include "ThinkTable.h"
 #include "define.h"
 #include "vector"
-#include "MoveGenerator.h"
-#include "DDZMoveManager.h"
+#include "DDZCombFactory.h"
 
 
 
@@ -15,125 +14,6 @@ CThinkTable::~CThinkTable()
 {
 }
 
-///**叫牌，返回分数 */
-//int CThinkTable::getBid(Player p)
-//{
-//	int bid=0;
-//	int cardsPoints=0;// 牌点
-//	getMyCardsInfo(p);
-//	if(Player::p3_cardsInfo.n.big==1)
-//	{
-//		cardsPoints+=6;  // 大王牌点+6
-//	}
-//	if(Player::p3_cardsInfo.n.small==1)
-//	{
-//		cardsPoints+=4;  // 小王牌点+4
-//	}
-//	if(Player::p3_cardsInfo.m.num!=0)
-//	{
-//		cardsPoints+=(2*Player::p3_cardsInfo.m.num); // 牌 2 牌点+2*数量
-//	}
-//
-//	if(Player::p3_cardsInfo.a.num!=0) // 牌3
-//	{
-//		if(Player::p3_cardsInfo.a.num==1)
-//			cardsPoints-=2;
-//		if(Player::p3_cardsInfo.a.num==2)
-//			cardsPoints-=1;
-//		if(Player::p3_cardsInfo.a.num==4)
-//			cardsPoints+=6;
-//	}
-//	if(Player::p3_cardsInfo.b.num!=0)  // 牌4
-//	{
-//		if(Player::p3_cardsInfo.b.num==1)
-//			cardsPoints-=2;
-//		if(Player::p3_cardsInfo.b.num==2)
-//			cardsPoints-=1;
-//		if(Player::p3_cardsInfo.b.num==4)
-//			cardsPoints+=6;
-//	}
-//	if(Player::p3_cardsInfo.c.num!=0)  // 牌5
-//	{
-//		if(Player::p3_cardsInfo.c.num==1)
-//			cardsPoints-=2;
-//		if(Player::p3_cardsInfo.c.num==2)
-//			cardsPoints-=1;
-//		if(Player::p3_cardsInfo.c.num==4)
-//			cardsPoints+=6;
-//	}
-//
-//	if(Player::p3_cardsInfo.d.num!=0)  // 牌6
-//	{
-//		if(Player::p3_cardsInfo.d.num==1)
-//			cardsPoints-=1;
-//		if(p.p3_cardsInfo.d.num==4)
-//			cardsPoints+=6;
-//	}
-//	if(p.p3_cardsInfo.e.num!=0)  // 牌7
-//	{
-//		if(p.p3_cardsInfo.e.num==1)
-//			cardsPoints-=1;
-//		if(p.p3_cardsInfo.e.num==4)
-//			cardsPoints+=8;// 若有牌7的炸弹，则其他玩家小顺断牌，则我方牌差点都可以叫牌
-//	}
-//	if(p.p3_cardsInfo.f.num!=0)  // 牌8
-//	{
-//		if(p.p3_cardsInfo.f.num==1)
-//			cardsPoints-=1;
-//		if(p.p3_cardsInfo.f.num==4)
-//			cardsPoints+=6;
-//	}
-//	if(p.p3_cardsInfo.g.num!=0)  // 牌9
-//	{
-//		if(p.p3_cardsInfo.g.num==1)
-//			cardsPoints-=1;
-//		if(p.p3_cardsInfo.g.num==4)
-//			cardsPoints+=6;
-//	}
-//	if(p.p3_cardsInfo.h.num!=0)  // 牌10
-//	{
-//		if(p.p3_cardsInfo.h.num==4)
-//			cardsPoints+=6;
-//	}
-//	if(p.p3_cardsInfo.i.num!=0)
-//	{
-//		if(p.p3_cardsInfo.i.num==3)
-//			cardsPoints+=1;
-//		if(p.p3_cardsInfo.i.num==4)  // 牌J
-//			cardsPoints+=6;
-//	}
-//	if(p.p3_cardsInfo.j.num!=0)
-//	{
-//		if(p.p3_cardsInfo.j.num==3)
-//				cardsPoints+=1;
-//		if(p.p3_cardsInfo.j.num==4)  // 牌Q
-//				cardsPoints+=6;
-//	}
-//	if(p.p3_cardsInfo.k.num!=0)
-//	{
-//		if(p.p3_cardsInfo.k.num==3)
-//				cardsPoints+=1;
-//		if(p.p3_cardsInfo.k.num==4)  // 牌K
-//				cardsPoints+=6;
-//	}
-//	if(p.p3_cardsInfo.l.num!=0)
-//	{
-//		if(p.p3_cardsInfo.l.num==3)
-//			cardsPoints+=1;
-//		if(p.p3_cardsInfo.l.num==4)  // 牌A
-//			cardsPoints+=6;
-//	}
-//		
-//
-//	if(cardsPoints>=8)
-//		bid+=3;                  // 叫3分
-//	else if(cardsPoints>=4)
-//		bid+=2;                  // 叫2分
-//	else if(cardsPoints>=2)
-//		bid+=1;                  // 叫1分
-//	return bid;
-//}
-
 
 int CThinkTable::getBid()
 {
@@ -142,17 +22,17 @@ int CThinkTable::getBid()
 	int cardsNum = 0;
 	memcpy(cards, Player::p3_EachCardNum, sizeof(cards));
 	cardsNum = Player::p3_cardsNum;
-	CMoveGenerator ddz_MG = CMoveGenerator();
-	DDZMoveManager ddz_MM = DDZMoveManager();
-	vector<CARDSMOVE> moves = ddz_MG.getMovesByMyself(cardsNum, cards);
-	vector<CARDSMOVE> combs =ddz_MM.getCombBySocre();
+	DDZCombFactory ddz_CF = DDZCombFactory(cards,Player::p3_cardsNum);
+	vector<CARDSMOVE> moves = ddz_CF.getComb1LeastSingle().moves;
+	ddz_CF.setCarryCards1_1(&moves);
+	ddz_CF.setCarryCards3_1(&moves);
 	
 
-	bid =getBidByComb(combs.size());//根据组合步数叫分
+	bid =getBidByComb(moves.size());//根据组合步数叫分
 
 	int level = getBidByTopCards(cards);
 
-	updateBidByCombsWithTopCards(&bid, &level);
+	updateBidByCombsWithTopCards(&bid, level);
 
 	updateBidByTheirBid(&bid);
 
@@ -173,40 +53,48 @@ int CThinkTable::getBid()
 /**
 *  根据组合步数和大牌数量改变叫分
 * @bid       原本叫分
-* @level    大牌级数
+* @level    大牌级数,1好 2一般 3差
 */
-void CThinkTable::updateBidByCombsWithTopCards(int *bid, const int *level)
+void CThinkTable::updateBidByCombsWithTopCards(int *bid, const int level)
 {
 	switch(*bid)
 	{
 	case 0:
 		{
-			if( *level ==1)
+			if( level ==1)
 			{
-				*bid=1;
+				*bid = 2;
 			}
 
 			break;
 		}
 	case 1:
 		{
-			if( *level ==1)
+			if( level ==1)
 			{
 				*bid = 2;
+			}
+			else if (level == 3)
+			{
+				*bid = 0;
 			}
 			break;
 		}
 	case 2:
 		{
-			if( *level == 1)
+			if( level == 1)
 			{
 				*bid = 3;
+			}
+			else if (level == 3)
+			{
+				*bid = 1;
 			}
 			break;
 		}
 	case 3:
 		{
-			if( *level ==3)
+			if( level ==3 || level == 2)
 			{
 				*bid = 2;
 			}
@@ -241,6 +129,7 @@ int CThinkTable::getBidByComb(int combsNum)
 /*
 *	统计手中大牌个数，所到达的水平
 *	好、一般、差
+*	1、 2 、 3
 */
 int CThinkTable::getBidByTopCards(unsigned *cards)
 {

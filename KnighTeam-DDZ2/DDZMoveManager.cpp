@@ -503,7 +503,7 @@ void DDZMoveManager::setStatus(CARDSMOVE *move)
 	vector<CARDSMOVE> moves = ddz_MG.getMovesByOthers(*move, Player::remaining);
 	
 
-	if(moves.size() == 1)//只有pass的走步
+	if(moves.size() == 1 ||(moves.size()==2 && moves[0].cardsType==ZHADAN))//只有pass的走步或者只有一个炸弹能管上，则赌一下
 	{
 		move->status=STATUS_MAX;
 		return ;

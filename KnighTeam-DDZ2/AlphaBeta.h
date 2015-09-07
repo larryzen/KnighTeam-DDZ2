@@ -1,6 +1,7 @@
 #pragma once
 #include "SearchEngine.h"
 #include "Player.h"
+#include "DDZMoveManager.h"
 
 class AlphaBeta:public CSearchEngine
 {
@@ -17,7 +18,7 @@ public:
 	int junkoNum;
 
 private:
-	
+	DDZMoveManager ddz_MM;
 	int IsFinal();
 	bool IsFinal1LastOne();
 	bool IsFinal2LastTwo();
@@ -29,10 +30,18 @@ private:
 	int BestMoveLinkList[BestMoveLinkListLen];
 
 	void initBestMoveLinkList();
+	void init_EXPAND_DEPTH();
+	void initCardsTypeNum();
+	void CardsTypeNumCount(vector<CARDSMOVE> moves);
 	int getMaxTimesBestMove();
 
 	long start;
 	long end;
+
+	int EXPAND_DEPTH;
+	int TOTAL_DEPTH;
+	int SEARCH_TIME;
+	double cpy_p1_MemberShip[TOTAL_KINDS], cpy_p2_MemberShip[TOTAL_KINDS];
 
 };
 

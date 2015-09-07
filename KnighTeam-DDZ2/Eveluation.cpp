@@ -1345,7 +1345,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 	vector<unsigned> current_cards = move->cards;
 	int currentValue; // 当前走步牌面值
 	int currentCardsNum, nextCardsNum, frontCardsNum; //当前玩家手中牌数量
-	
+	bool IsSplit = move->IsSplit;
 	
 	
 	unsigned tmp_cards[15];
@@ -1408,14 +1408,20 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			score-=10000;
 		}
 	}
+
+	if (IsSplit)
+	{
+		score-=200;//优先出非拆牌走步
+	}
+	
 	
 	if ((IsCardOriginator(turn) || (!current_IsLandlord && !next_IsLandlord)) 
 			&& cardsType != PASS)
 	{
-		score += (D - current_cards[0]) * 10;//自己主动出牌发起者，尽量走最小
+		score += (D - current_cards[0]) * 200;//自己主动出牌发起者，尽量走最小
 	}
 	else if (!IsCardOriginator(turn) && next_IsLandlord 
-			&& cardsType != PASS && Player::lastPlayer == 1)//敌方主动出牌，且我方为顶家
+			&& cardsType != PASS && Player::firstPlayer == 1)//敌方主动出牌，且我方为顶家
 	{
 		switch (currentValue)//顶牌
 		{
@@ -1469,7 +1475,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 				 int canGetRight = GetCardsRightIfPass();
 				 if (canGetRight == 1)//pass获得牌权
 				 {
-					score+=1000;
+					score+=100;
 				 }
 				 else if (canGetRight == -1)
 				 {
@@ -1479,7 +1485,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 
 				 if (!IsCurrentTeam(current_IsLandlord, Player::lastPlayer))
 				 {
-					score-=10000;
+					score-=500;
 				 }
 				 if (Player::p1_IsLandlord)
 				 {
@@ -1553,7 +1559,15 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 							   }
 						   }
 					   }
-					score+=20;
+					   if (turn == 0 && outWay)
+					   {
+						   score += (15 * (Player::OnHandCardsTypeNum[SINGLE]-1));
+					   }
+					   else
+					   {
+							score += 20;
+					   }
+					
 			break;
 		}
 
@@ -1591,17 +1605,33 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 						   }
 					   }
 				   }
-			score += 10;
+				   if (turn == 0 && outWay)
+				   {
+					   score += (10 * Player::OnHandCardsTypeNum[COUPLE]);
+				   }
+				   else
+				   {
+					   score += 10;
+				   }
 			break;
 		}
 
 	case SANTIAO:
 		{
 			int threeTiaoValue=play->getSanTiaoValue(current_cards);
-			score+=5;
-			if (currentValue == T)
+
+			if (currentValue == T && outWay)
 			{
-				score-=800;
+				score -= 10000;
+			}
+
+			if (turn == 0 && outWay)
+			{
+				score += (25 * (Player::OnHandCardsTypeNum[SANTIAO] - 1));
+			}
+			else
+			{
+				score += 25;
 			}
 			break;
 		}
@@ -1611,15 +1641,20 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			vector<unsigned> cardsInfo = play->getThree_OneValue(current_cards);
 			int threeTiaoValue=cardsInfo.at(0);
 
-			if(tmp_cards[threeTiaoValue]==3)
+			if (turn == 0)
 			{
-				score+=30;
+				score += (30 * Player::OnHandCardsTypeNum[THREE_ONE]);
+			}
+			else
+			{
+				score += 30;
 			}
 			
+			
 
-			if (currentValue == T)
+			if (currentValue == T && outWay)
 			{
-				score -= 800;
+				score -= 10000;
 			}
 		}
 		break;
@@ -1630,14 +1665,21 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		
 			int threeTiaoValue=cardsInfo.at(0);
 
-			if(tmp_cards[threeTiaoValue]==3)
+		
+			if (turn == 0)
 			{
-				score+=30;
+				score += (30 * Player::OnHandCardsTypeNum[THREE_TWO]);
+			}
+			else
+			{
+				score += 30;
 			}
 			
-			if (currentValue == T)
+			
+
+			if (currentValue == T && outWay)
 			{
-				score -= 800;
+				score -= 10000;
 			}
 		}
 		break;
@@ -1648,7 +1690,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			int startValue = cardsInfo.at(0);
 			int endValue = cardsInfo.at(1);
 
-			score += ((endValue - startValue + 1) * 30);//优先出长的单顺
+			score += ((endValue - startValue + 1) * 100);//优先出长的单顺
 		}
 		break;
 
@@ -1657,7 +1699,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			vector<unsigned> cardsInfo = play->getDualJunkoValue(current_cards);
 			int startValue = cardsInfo.at(0);
 			int endValue = cardsInfo.at(1);
-			score += (endValue - startValue + 1) * 20;
+			score += (endValue - startValue + 1) * 70;
 		}
 		break;
 
@@ -1666,7 +1708,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			vector<unsigned> cardsInfo = play->getThree_ShunValue(current_cards);
 			int startValue = cardsInfo.at(0);
 			int endValue = cardsInfo.at(1);
-			score += (endValue-startValue + 1)* 10;
+			score += (endValue-startValue + 1)* 100;
 		}
 		break;
 
@@ -1677,7 +1719,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			int endValue = cardsInfo.at(1);
 			int junkoNum = endValue-startValue+1;
 			
-			score += (endValue - startValue + 1) * 15;
+			score += (endValue - startValue + 1) * 500;
 		}
 		break;
 
@@ -1688,7 +1730,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			int endValue = cardsInfo.at(1);
 			int junkoNum = endValue-startValue+1;
 			 
-			score += (endValue - startValue + 1) * 12;
+			score += (endValue - startValue + 1) * 400;
 		}
 		break;
 

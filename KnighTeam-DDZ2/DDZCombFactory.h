@@ -12,7 +12,7 @@ public:
 	DDZCombFactory(unsigned cards[15], int cardsNum);
 	~DDZCombFactory(void);
 	void getCombLeastSingle(unsigned *cards, int *cardsNum);
-	
+	bool flag[15][15];
 	CombsLib getCombs();
 	Comb getComb1LeastSingle();		// 找到最少单牌的组合
 	Comb getComb2LeastMoves();		// 找到最少组合步数的组合
@@ -22,13 +22,14 @@ public:
 	CombsLib combs;
 	Comb comb;
 	void setCarryCards1(vector<CARDSMOVE> *moves);
-	void setCarryCards2(vector<CARDSMOVE> *moves);
 	void setCarryCards3(vector<CARDSMOVE> *moves);
 	void setCarryCards4(vector<CARDSMOVE> *moves);
 
 	void setCarryCards1_1(vector<CARDSMOVE> *moves);
+	void setCarryCards3_1(vector<CARDSMOVE> *moves);
+
+	void setCarryCards1_2(vector<CARDSMOVE> *moves);
 	private:
-		bool flag[13][13];//优化单顺递归查找，动态规划的思想
 		unsigned comb_cards[15];
 		int onHandCardsNum;
 		void addComb();
@@ -56,6 +57,7 @@ public:
 		
 		void setSingleNum(Comb *comb);
 		void setSantiaoNum(Comb *comb);
+		void setDualJunkoNum(Comb *comb);
 		void setGain(Comb *cb);
 
 		int compareSingle(CARDSMOVE single1, CARDSMOVE single2);

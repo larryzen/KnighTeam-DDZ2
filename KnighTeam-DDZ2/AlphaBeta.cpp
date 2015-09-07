@@ -10,7 +10,10 @@ AlphaBeta::AlphaBeta(void)
 	junkoNum=0;
 	bestMove = CARDSMOVE();
 	FirstMoves = vector<CARDSMOVE>();
+	ddz_MM = DDZMoveManager();
 	initBestMoveLinkList();
+	init_EXPAND_DEPTH();
+	
 	
 };
 
@@ -18,6 +21,29 @@ AlphaBeta::~AlphaBeta(void)
 {
 }
 
+/**
+*	初始化拓展层数
+*/
+void AlphaBeta::init_EXPAND_DEPTH()
+{
+	if (Player::p3_cardsNum >= 17)
+	{
+		EXPAND_DEPTH = 1; //防止第一手出牌搜索时间过久
+		TOTAL_DEPTH = 3;
+		SEARCH_TIME = 2;
+	}
+	else
+	{
+		EXPAND_DEPTH = 3;
+		TOTAL_DEPTH = 9;
+		SEARCH_TIME = 2;
+	}
+
+}
+
+/**
+*  初始化最佳走步链表
+*/
 void AlphaBeta::initBestMoveLinkList()
 {
 	for (int i = 0; i < BestMoveLinkListLen; i++)
@@ -27,15 +53,13 @@ void AlphaBeta::initBestMoveLinkList()
 }
 int AlphaBeta::SearchAGoodMove(int nDepth)
 {
-	DDZMoveManager ddz_MM = DDZMoveManager();
 	int SimulateTimes = 5;
 	start = clock();
 	DDZCombFactory ddz_CF = DDZCombFactory(Player::p3_EachCardNum, Player::p3_cardsNum);
 	vector<CARDSMOVE> mustWin = ddz_CF.getComb1LeastSingle().moves;
 	ddz_CF.setCarryCards1_1(&mustWin);
-	ddz_CF.setCarryCards3(&mustWin);
-	ddz_CF.setCarryCards4(&mustWin);
-	
+	ddz_CF.setCarryCards3_1(&mustWin);
+	CardsTypeNumCount(mustWin);
 
 	while (true)
 	{
@@ -57,7 +81,7 @@ int AlphaBeta::SearchAGoodMove(int nDepth)
 			BestMoveLinkList[i]++;
 		}
 		end = clock();
-		if (end - start > (AlphaBetaTime * 1000))
+		if (end - start > (SEARCH_TIME * 1000))
 		{
 			break;
 		}
@@ -95,12 +119,6 @@ int AlphaBeta::getMaxTimesBestMove()
 int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 {
 	DDZMoveManager ddz_MM = DDZMoveManager();
-
-
-
-
-	int canPlayOver = 0;
-	int current = -99999;
 	CMoveGenerator *ddz_MG;
 	CEveluation *ddz_Eve;
 	ddz_MG = (CMoveGenerator*)malloc(sizeof(CMoveGenerator));
@@ -109,11 +127,6 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 
 	moves = ddz_MG->getMoves(nDepth);
 
-	/*if (Player::p3_cardsNum == 20)
-	{
-		bestMove = ddz_Eve->firstAttack(moves);
-		return 0;	
-	}*/
 	int result = IsGameOver(nDepth);
 	if (result)
 	{
@@ -121,12 +134,16 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 		{
 			FirstMoves[nodeIndex].win += 1;
 		}
+		else
+		{
+			FirstMoves[nodeIndex].lose +=1;
+		}
 		FirstMoves[nodeIndex].Count++;
-		FirstMoves[nodeIndex].score += (result *(4000 - nDepth * 1000));//加入区分赢的深度，越浅越好
+		FirstMoves[nodeIndex].score += (result *(1000 + (AlphaBeta_Depth - nDepth) * 300));//加入区分赢的深度，越浅越好
 		return  0;
 	}
 
-	if (nDepth == AlphaBeta_Depth)
+	if (nDepth == TOTAL_DEPTH)
 	{
 		FirstMoves[nodeIndex].Count++;
 		return 0;
@@ -141,15 +158,20 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 	ddz_Eve->PositiveSimulatedMenu();
 	ddz_Eve->EveluateMoves(&moves, nDepth);
 
-	if (nDepth < 4)
+	
+	
+	if (nDepth < EXPAND_DEPTH)
 	{
 		if (nDepth == 0)
 		{
+			memcpy(cpy_p1_MemberShip, Player::p1_Membership, sizeof(cpy_p1_MemberShip));
+			memcpy(cpy_p2_MemberShip, Player::p2_Membership, sizeof(cpy_p2_MemberShip));
 			FirstMoves = moves;
 			for (int i = FirstMoves.size() - 1; i >= 0; i--)
 			{
-				FirstMoves[i].Count=0;
-				FirstMoves[i].win=0;
+				FirstMoves[i].Count = 0;
+				FirstMoves[i].win = 0;
+				FirstMoves[i].lose = 0;
 			}
 			if (moves.size() == 1)
 			{
@@ -161,12 +183,14 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 		for (size_t i = 0; i < moves.size(); i++)
 		{
 			MakeMove(moves[i], nDepth);
+			
 
-			if (nDepth==0)
+			if (nDepth == 0)
 				SearchAGoodMove(nDepth + 1, i);
 			else
 				SearchAGoodMove(nDepth + 1, nodeIndex);
 
+			
 			UnMakeMove(moves[i], nDepth);
 		}
 		
@@ -177,14 +201,26 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 		if (index != -1)
 		{
 			MakeMove(moves[index], nDepth);
+			
 			if (nDepth % 3 != 0)
 			{
 				ddz_Eve->ClearedByPlayCards(moves[index].cards);
 				ddz_Eve->UpdateByPlayCards(nDepth % 3, moves[index].cardsType, moves[index].cards);
 			}
-		
+
 			SearchAGoodMove(nDepth + 1, nodeIndex);
+
+			
 			UnMakeMove(moves[index], nDepth);
+			
+			
+			
+		}
+
+		if (nDepth == 0)
+		{
+			memcpy(Player::p1_Membership, cpy_p1_MemberShip, sizeof(cpy_p1_MemberShip));
+			memcpy(Player::p2_Membership, cpy_p2_MemberShip, sizeof(cpy_p2_MemberShip));
 		}
 	}
 
@@ -213,18 +249,44 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 	return 0;
 }
 
-
-
+void AlphaBeta::initCardsTypeNum()
+{
+	for (int i = 0; i < 15; i++)
+	{
+		Player::OnHandCardsTypeNum[i] = 0;
+	}
+}
+void AlphaBeta::CardsTypeNumCount(vector<CARDSMOVE> moves)
+{
+	initCardsTypeNum();
+	for (int i = moves.size() - 1; i >= 0; i--)
+	{
+		if (moves[i].cardsType != PASS)
+		{
+			Player::OnHandCardsTypeNum[moves[i].cardsType]++;
+		}
+	}
+}
 int	AlphaBeta::getMaxScoreIndex(vector<CARDSMOVE> moves)
 {
 	int index = -1;
-	int current = -9999;
+	int current = -99999;
 
 	int winIndex = -1;
 	double currentWin = 0;
 
+
+	if (!moves.empty() && moves[moves.size() - 1].cardsType == PASS)
+	{
+		moves[moves.size() - 1].score<0 ? moves[moves.size() - 1].score * 3 : moves[moves.size() - 1].score / 3;
+	}
 	for (size_t i = 0; i < moves.size(); i++)
 	{
+		if ((moves[i].cardsType==ROCKET || moves[i].cardsType==ZHADAN) 
+				&& moves[i].score<-10000)
+		{
+			continue;
+		}
 		if ((moves[i].score) > current)
 		{
 			current = (moves[i].score);

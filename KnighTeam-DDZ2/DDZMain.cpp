@@ -8,6 +8,8 @@
 #include "ThinkTable.h"
 #include "Player.h"
 #include "FileWriter.h"
+#include "time.h"
+
 using namespace std;
 
 
@@ -44,7 +46,15 @@ int main()
 			cout<< cOutMessage<<endl;
 		}
 		if(strcmp(cShort,"INF")==0)					//ÂÖ¾ÖÐÅÏ¢
-		{
+		{	
+			if (!Player::cardsMoveRecords.empty())
+			{
+				string filePath = FileWriter::getSystemTime1();
+				FileWriter fw = FileWriter(filePath);
+				fw.WriteToFile(Player::cardsMoveRecords, CARDSMOVE());
+			}
+			
+
 			player.initPlayer();
 			player.CalInfo(cInMessage,cOutMessage);
 			cout<< cOutMessage<<endl;

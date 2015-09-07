@@ -25,7 +25,7 @@ private:
 	int getBidByTopCards(unsigned *cards);
 	int getBidByCardsPoints(unsigned *cards);
 	void updateBidByTheirBid(int *bid);
-	void updateBidByCombsWithTopCards(int *bid, const int *level);
+	void updateBidByCombsWithTopCards(int *bid, const int level);
 	int getCurrentMaxBid();
 };
 

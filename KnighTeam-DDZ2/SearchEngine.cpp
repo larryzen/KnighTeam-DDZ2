@@ -3,6 +3,7 @@
 #include"define.h"
 #include "time.h"
 #include "DDZMoveManager.h"
+#include "FileWriter.h"
 
 using namespace std;
 
@@ -49,6 +50,8 @@ int CSearchEngine::IsGameOver(int nDepth)
 		{
 			if(Player::p1_IsLandlord)// 玩家p1为地主
 			{
+				
+
 				gainValue = GetAllGain(1);
 				return -1 * gainValue;// 返回极小值
 			}
@@ -212,7 +215,11 @@ bool CSearchEngine::CanWin(vector<CARDSMOVE> FirstMoves, int outWay)
 				for (int i = 0; i < size; i++)
 				{
 					if (FirstMoves[i].status == STATUS_MAX)
+					{
 						bestMove = FirstMoves[i];
+						bestMove.side = 0;
+					}
+						
 				}
 			}
 			return true;

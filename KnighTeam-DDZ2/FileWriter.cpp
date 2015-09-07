@@ -1,9 +1,10 @@
 #include "FileWriter.h"
 #include "string.h"
-
+#include "time.h"
 
 FileWriter::FileWriter(void)
 {
+	FileWriter(getSystemTime1());
 }
 
 FileWriter::~FileWriter(void)
@@ -23,20 +24,14 @@ void FileWriter::WriteToFile(vector<CARDSMOVE> moves,CARDSMOVE bestMove)
 	for(unsigned i=0;i<moves.size();i++)
 	{
 		fout<<"\t\t";
+		fout << moves.at(i).side << "\t";
 		for(unsigned j=0;j<moves.at(i).cards.size();j++)
 		{
 			fout<<moves.at(i).cards.at(j)<<" ";
-		}		
-		fout<<moves.at(i).cardsType<<"\t\t";
-		fout<<"估值： "<<moves.at(i).score;
+		}
 		fout<<endl;		
 	}
-	fout<<"\t\t最终走步：";
-	for(unsigned j=0;j<bestMove.cards.size();j++)
-		{
-			fout<<bestMove.cards.at(j)<<" ";
-		}
-	fout<<bestMove.score<<endl;
+
 	fout<<"\t\t================================="<<endl;
 	fout.flush();
 	fout.close();
@@ -95,4 +90,17 @@ void FileWriter::writeRandNun(int r)
 	fout << r <<",";
 	fout.flush();
 	fout.close();
+}
+
+string FileWriter::getSystemTime1()
+{
+	time_t t;
+	time(&t);
+
+	char strTime[64];
+	struct tm tminfo;
+	localtime_s(&tminfo, &t);
+	strftime(strTime, sizeof(strTime), "%Y年%m月%d日%H时%M分%S秒.txt", &tminfo);
+	string s = string(strTime);
+	return s;
 }

@@ -4,7 +4,7 @@
 
 using namespace std;
 
-class VectorUtil :public vector<unsigned>
+class VectorUtil
 {
 public:
 	VectorUtil(void);

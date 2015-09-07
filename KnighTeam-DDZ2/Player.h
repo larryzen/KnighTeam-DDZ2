@@ -72,6 +72,7 @@ public:
 	static vector<CARDSMOVE> cardsMoveRecords;
 	static unsigned p1_EachCardAndRemaining[TOTAL_KINDS];	//存储除去p2手中一定存在的牌还剩余的牌
 	static unsigned p2_EachCardAndRemaining[TOTAL_KINDS];	//存储除去p1手中一定存在的牌还剩余的牌
+	static unsigned OnHandCardsTypeNum[15];					//统计手中各种牌型数量，以便估值
 	/**************************************************/
 
 };

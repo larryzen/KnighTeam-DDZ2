@@ -35,7 +35,7 @@ public:
 
 private:
 	vector<CARDSMOVE> getMovesByCombMovesForOneMove(CARDSMOVE key, vector<CARDSMOVE> moves);
-	void FinalMovesDeal(vector<CARDSMOVE> *moves);
+	void FinalMovesDeal(vector<CARDSMOVE> *moves, int turn);
 	void GeneralSplitDeal(vector<CARDSMOVE> *moves,  unsigned *EachCardsNum);
 	bool HaveSingleJunko(unsigned start, unsigned JunkoNum, unsigned *cards);
 	bool HaveDualJunko(unsigned start, unsigned JunkoNum, unsigned *cards);
@@ -77,4 +77,6 @@ private:
 	vector<CARDSMOVE> getMovesByType13Four_Two(unsigned Four_TwoValue, unsigned *cards);
 	vector<CARDSMOVE> getMovesByType14Four_TwoCouple(unsigned Four_TwoCoupleValue, unsigned *cards);
 
+
+	bool IsSplit(int turn);
 };

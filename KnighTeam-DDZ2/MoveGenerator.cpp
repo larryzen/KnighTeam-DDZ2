@@ -91,21 +91,20 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 		cardsNum = Player::p3_cardsNum;
 	}
 
-
+	ddz_CF = DDZCombFactory(tmp_EachCardNum, cardsNum);
+	Comb c1 = ddz_CF.getComb1LeastSingle();
 
 	if(IsCanGo)	// 主动出牌
 	{	
-		ddz_CF = DDZCombFactory(tmp_EachCardNum, cardsNum);
-		Comb c1 = ddz_CF.getComb1LeastSingle();
+		
 
 		moves = c1.moves;
 		ddz_CF.setCarryCards1(&moves);
 		ddz_CF.setCarryCards3(&moves);
 		ddz_CF.setCarryCards4(&moves);
-		if (CThinkTable::IsHalfGame())//终局模拟处理
-		{
-			FinalMovesDeal(&moves);
-		}
+		
+		FinalMovesDeal(&moves, turn);
+		
 		
 	
 		
@@ -118,10 +117,9 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 	else	   // 被动出牌(按其他玩家上一轮出牌走步)
 	{
 		
-		ddz_CF = DDZCombFactory(tmp_EachCardNum, cardsNum);
-		vector<CARDSMOVE> tmp_moves = ddz_CF.getComb1LeastSingle().moves;
+		vector<CARDSMOVE> tmp_moves = c1.moves;
 		GeneralSplitDeal(&tmp_moves, tmp_EachCardNum);
-		ddz_CF.setCarryCards1(&tmp_moves);
+		ddz_CF.setCarryCards1_2(&tmp_moves);
 		ddz_CF.setCarryCards3(&tmp_moves);
 		ddz_CF.setCarryCards4(&tmp_moves);
 		moves = getMovesByCombMovesForOneMove(lastMove, tmp_moves);
@@ -152,21 +150,115 @@ void CMoveGenerator::GeneralSplitDeal(vector<CARDSMOVE> *moves, unsigned *EachCa
 	for (int i = moves->size() - 1; i >= 0; i--)
 	{
 		cardsType = moves->at(i).cardsType;
+		CARDSMOVE currentMove = moves->at(i);
 		// 拆火箭
-		if (cardsType == ROCKET)
+		if (cardsType == ROCKET && EachCardsNum[T] == 0 )
 		{
 			m = CARDSMOVE();
 			VectorUtil::addElement(&m.cards, X, 1);
 			m.cardsType = SINGLE;
+			m.IsSplit = true;
 			moves->push_back(m);
 
 			m = CARDSMOVE();
 			VectorUtil::addElement(&m.cards, D, 1);
 			m.cardsType = SINGLE;
+			m.IsSplit = true;
 			moves->push_back(m);
 		}
+		else if (cardsType== DUALJUNKO && currentMove.cards[0]>=J)
+		{
+			for (int k = 0; k < (currentMove.cards.size() / 2); k++)
+			{
+				m = CARDSMOVE();
+				VectorUtil::addElement(&m.cards, currentMove.cards[0] + k, 2);
+				m.cardsType = COUPLE;
+				m.IsSplit = true;
+				moves->push_back(m);
+			}
+		}
+		// 三顺牌面值大于等于9 的可以拆掉
+		else if (cardsType == THREEJUNKO && currentMove.cards[0] >= (J - 2))
+		{
+			for (int k = 0; k < (currentMove.cards.size() / 3); k++)
+			{
+				m = CARDSMOVE();
+				VectorUtil::addElement(&m.cards, currentMove.cards[0] + k, 3);
+				m.cardsType = SANTIAO;
+				m.IsSplit = true;
+				moves->push_back(m);
+			}
+		}
+		else if (cardsType == SINGLEJUNKO && currentMove.cards.size() > 5)
+		{
+			int size = currentMove.cards.size();
+			if (size == 6)
+			{
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(0, 4, currentMove.cards);
+				m.cardsType = SINGLEJUNKO;
+				m.IsSplit = true;
 
-		if ((cardsType == COUPLE || cardsType == SANTIAO) && moves->at(i).cards[0] == top)
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(5, 5, currentMove.cards);
+				m.cardsType = SINGLE;
+				m.IsSplit = true;
+			}
+			else
+			{
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(0, size - 2, currentMove.cards);//拆成小单顺+1单牌
+				m.cardsType = SINGLEJUNKO;
+				m.IsSplit = true;
+				moves->push_back(m);
+
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(size - 1, size - 1, currentMove.cards);
+				m.cardsType = SINGLE;
+				m.IsSplit = true;
+				moves->push_back(m);
+
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(0, size - 3, currentMove.cards);//拆成小单顺+2单牌
+				m.cardsType = SINGLEJUNKO;
+				m.IsSplit = true;
+				moves->push_back(m);
+
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(size - 2 , size - 2, currentMove.cards);
+				m.cardsType = SINGLE;
+				m.IsSplit = true;
+				moves->push_back(m);
+
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(1, size - 1, currentMove.cards);//拆成大单顺+1单牌
+				m.cardsType = SINGLEJUNKO;
+				m.IsSplit = true;
+				moves->push_back(m);
+
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(0, 0, currentMove.cards);
+				m.cardsType = SINGLE;
+				m.IsSplit = true;
+				moves->push_back(m);
+
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(2, size - 1, currentMove.cards);//拆成大单顺+2单牌
+				m.cardsType = SINGLEJUNKO;
+				m.IsSplit = true;
+				moves->push_back(m);
+
+				m = CARDSMOVE();
+				m.cards = VectorUtil::subVector(1, 1, currentMove.cards);
+				m.cardsType = SINGLE;
+				m.IsSplit = true;
+				moves->push_back(m);
+			}
+			
+		}
+
+		// 拆手中最大的牌，A及以下开始
+		if ((cardsType == COUPLE || cardsType == SANTIAO || cardsType==ZHADAN) && currentMove.cards[0] == top && top <= A)
 		{
 			m = CARDSMOVE();
 			VectorUtil::addElement(&m.cards, top, 1);
@@ -180,12 +272,24 @@ void CMoveGenerator::GeneralSplitDeal(vector<CARDSMOVE> *moves, unsigned *EachCa
 				VectorUtil::addElement(&m.cards, top, 2);
 
 				m.cardsType = COUPLE;
+				m.IsSplit = true;
+				moves->push_back(m);
+			}
 
+			if (cardsType == ZHADAN)
+			{
+				m = CARDSMOVE();
+				VectorUtil::addElement(&m.cards, top, 3);
+				m.cardsType = SANTIAO;
+				m.IsSplit = true;
 				moves->push_back(m);
 			}
 		}
-		//将2 的对牌，三条, 炸弹拆开
-		if ((cardsType == COUPLE || cardsType == SANTIAO || cardsType==ZHADAN) && moves->at(i).cards[0]==T)
+		//当没有大小王时,将四个2拆开；将2 的对牌，三条拆开
+		if (((((EachCardsNum[X] == 0 && EachCardsNum[D] == 0) 
+				|| (EachCardsNum[X]==1 && EachCardsNum[D]==1)) && cardsType == ZHADAN)
+					||(cardsType == COUPLE || cardsType == SANTIAO)) 
+							&& currentMove.cards[0] == T)
 		{
 			m = CARDSMOVE();
 			VectorUtil::addElement(&m.cards, moves->at(i).cards[0], 1);
@@ -199,7 +303,7 @@ void CMoveGenerator::GeneralSplitDeal(vector<CARDSMOVE> *moves, unsigned *EachCa
 				VectorUtil::addElement(&m.cards, moves->at(i).cards[0], 2);
 				
 				m.cardsType = COUPLE;
-
+				m.IsSplit = true;
 				moves->push_back(m);
 			}
 
@@ -208,37 +312,132 @@ void CMoveGenerator::GeneralSplitDeal(vector<CARDSMOVE> *moves, unsigned *EachCa
 				m = CARDSMOVE();
 				VectorUtil::addElement(&m.cards, moves->at(i).cards[0], 3);
 				m.cardsType = SANTIAO;
+				m.IsSplit = true;
 				moves->push_back(m);
 			}
 		}
 	}
 }
-void CMoveGenerator::FinalMovesDeal(vector<CARDSMOVE> *moves)
+/**
+* 判断什么时候主动出牌拆牌
+*/
+bool CMoveGenerator::IsSplit(int turn)
 {
-	int cardsType = INVALID;
-	CARDSMOVE m;
-	for (int i = moves->size() - 1; i >= 0; i--)
+	if (turn == 0)
 	{
-		cardsType = moves->at(i).cardsType;
-		if (cardsType == COUPLE || cardsType == SANTIAO)
+		if (Player::p3_IsLandlord)
 		{
-			m = CARDSMOVE();
-			m.cards.push_back(moves->at(i).cards[0]);
-			m.cardsType = SINGLE;
-
-			moves->push_back(m);
-
-			if (cardsType == SANTIAO)
+			if (Player::p1_cardsNum == 2 || Player::p2_cardsNum == 2)
 			{
-				m = CARDSMOVE();
-				m.cards.push_back(moves->at(i).cards[0]);
-				m.cards.push_back(moves->at(i).cards[0]);
-				m.cardsType = COUPLE;
-
-				moves->push_back(m);
+				return true;
+			}
+		}
+		else
+		{
+			if (Player::p1_IsLandlord)
+			{
+				if (Player::p1_cardsNum == 2 || Player::p2_cardsNum == 1)
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (Player::p2_cardsNum == 2 || Player::p1_cardsNum == 1)
+				{
+					return true;
+				}
+			}
+		}
+		
+	}
+	else if (turn == 1)
+	{
+		if (Player::p1_IsLandlord)
+		{
+			if (Player::p2_cardsNum == 2 || Player::p3_cardsNum == 2)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			if (Player::p2_IsLandlord)
+			{
+				if (Player::p2_cardsNum == 2 || Player::p3_cardsNum == 1)
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (Player::p3_cardsNum == 2 || Player::p2_cardsNum == 1)
+				{
+					return true;
+				}
 			}
 		}
 	}
+	else
+	{
+		if (Player::p2_IsLandlord)
+		{
+			if (Player::p3_cardsNum == 2 || Player::p1_cardsNum == 2)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			if (Player::p1_IsLandlord)
+			{
+				if (Player::p1_cardsNum == 2 || Player::p3_cardsNum == 1)
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (Player::p3_cardsNum == 2 || Player::p1_cardsNum == 1)
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+void CMoveGenerator::FinalMovesDeal(vector<CARDSMOVE> *moves, int turn)
+{
+
+	if (CThinkTable::IsHalfGame() || IsSplit(turn))
+	{
+		int cardsType = INVALID;
+		CARDSMOVE m;
+		for (int i = moves->size() - 1; i >= 0; i--)
+		{
+			cardsType = moves->at(i).cardsType;
+			if (cardsType == COUPLE || cardsType == SANTIAO)
+			{
+				m = CARDSMOVE();
+				VectorUtil::addElement(&m.cards, moves->at(i).cards[0], 1);
+				m.cardsType = SINGLE;
+				m.IsSplit = true;
+				moves->push_back(m);
+
+				if (cardsType == SANTIAO)
+				{
+					m = CARDSMOVE();
+					VectorUtil::addElement(&m.cards, moves->at(i).cards[0], 2);
+					m.cardsType = COUPLE;
+					m.IsSplit = true;
+					moves->push_back(m);
+				}
+			}
+		}
+	}
+	
 }
 
 vector<CARDSMOVE> CMoveGenerator::getMovesByCombMovesForOneMove(CARDSMOVE key, vector<CARDSMOVE> moves)

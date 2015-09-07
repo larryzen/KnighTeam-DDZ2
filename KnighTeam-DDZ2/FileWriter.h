@@ -18,7 +18,7 @@ public:
 	void writeOrderFromFatherExe(char *cInMessage);
 	void writeErrorInfo(string errorInfo);
 	void writeRandNun(int r);
-
+	static string getSystemTime1();
 private:
 	string filePath;
 };

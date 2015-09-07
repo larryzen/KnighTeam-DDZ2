@@ -14,6 +14,7 @@
 #include "AlphaBeta.h"
 #include "UCTSearch.h"
 #include "SplitCards.h"
+#include "FileWriter.h"
 
 
 using namespace std;
@@ -480,7 +481,7 @@ void DDZPlayer:: CalPla(char *cInMessage,char *cOutMessage)
 			else
 			{
 				eveluate->UpdateFewCards(2);
-				null_move.side = 1;
+				null_move.side = 2;
 				Player::cardsMoveRecords.push_back(null_move);
 			}
 		}
@@ -542,32 +543,26 @@ void DDZPlayer:: CalPla(char *cInMessage,char *cOutMessage)
 			CARDSMOVE bestMove;
 
 			CSearchEngine *ddz_SE;
+			/*FileWriter fw = FileWriter("search.txt");*/
 			
 			if (think->IsHalfGame() && START_UCT)
 			{
 				ddz_SE = new UCTSearch();
+			//	fw.writeOrderFromFatherExe("uct");
 			}
 			else
 			{
 				ddz_SE = new AlphaBeta();
+			//	fw.writeOrderFromFatherExe("a-b");
 			}
 			
 
 			ddz_SE->SearchAGoodMove(0);//获得最佳走步
 			bestMove = ddz_SE->bestMove;
 
-			if (0 &&bestMove.cardsType == PASS)//若搜索引擎未搜到走步
+			if (bestMove.cardsType == PASS)//若搜索引擎未搜到走步
 			{
 				SplitCards ddz_SC = SplitCards(Player::p3_EachCardNum);
-				//则进行必要的拆牌处理
-				if (Player::p1_IsLandlord || (Player::p3_IsLandlord 
-				&& (Player::lastMove.cardsType == SINGLE || Player::lastMove.cardsType == COUPLE)))
-				{
-					
-					bestMove = ddz_SC.GetASplitMove(Player::lastMove, false);
-				}
-				
-				
 				if (Player::p1_IsLandlord)
 				{
 					if (Player::p1_cardsNum <= RESTCARDS && Player::lastPlayer == 1)

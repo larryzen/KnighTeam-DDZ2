@@ -112,3 +112,5 @@ vector<CARDSMOVE> Player::cardsMoveRecords;
 unsigned Player::p1_EachCardAndRemaining[TOTAL_KINDS];	//存储除去p2手中一定存在的牌还剩余的牌
 
 unsigned Player::p2_EachCardAndRemaining[TOTAL_KINDS];	//存储除去p1手中一定存在的牌还剩余的牌
+
+unsigned Player::OnHandCardsTypeNum[15] ={ 0 };
