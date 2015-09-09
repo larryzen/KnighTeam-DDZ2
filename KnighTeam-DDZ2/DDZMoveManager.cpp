@@ -497,6 +497,11 @@ void DDZMoveManager::setMovesStatus(vector<CARDSMOVE> *moves)
 /** 设置某一走步的status */
 void DDZMoveManager::setStatus(CARDSMOVE *move)
 {
+	if (move->cardsType == PASS)
+	{
+		move->status = STATUS_SMALL;
+		return ;
+	}
 	CMoveGenerator ddz_MG = CMoveGenerator();
 	
 
@@ -649,52 +654,4 @@ bool DDZMoveManager::IsEqualsMove(CARDSMOVE m1, CARDSMOVE m2)
 
 	return true;
 
-}
-
-/** 
-*	根据走步估值获得一个走步组合
-*/
-vector<CARDSMOVE> DDZMoveManager::getCombBySocre()
-{
-	CEveluation ddz_Eve = CEveluation();
-	CMoveGenerator ddz_MG = CMoveGenerator();
-	DDZMoveManager ddz_MM = DDZMoveManager();
-	vector<CARDSMOVE> comb;
-
-	unsigned tmp_cards[15];
-	memcpy(tmp_cards,Player::p3_EachCardNum,sizeof(tmp_cards));
-	int tmp_cardsNum = Player::p3_cardsNum;
-
-	while(tmp_cardsNum)
-	{
-		vector<CARDSMOVE> moves = ddz_MG.getMovesByMyself(tmp_cardsNum,tmp_cards);
-	
-		ddz_Eve.EveluateMoves(&moves,3);
-		
-		for(size_t k=0;k<moves.size();k++)
-		{
-			ddz_Eve.cutCarryCards(&moves[k]);
-		}
-		int selectedMove = getMaxScoreMove(moves);
-		if (selectedMove >= 0)
-		{
-			CARDSMOVE selected = moves[selectedMove];
-			comb.push_back(selected);
-			for (size_t j = 0; j<selected.cards.size(); j++)
-			{
-				tmp_cards[selected.cards[j]]--;
-			}
-
-			tmp_cardsNum -= selected.cards.size();
-		}
-		else
-		{
-			FileWriter fw = FileWriter();
-			fw.writeErrorInfo("error: DDZMoveManager getCombByScore() " + selectedMove);
-		}
-		
-		
-	}
-
-	return comb;
 }

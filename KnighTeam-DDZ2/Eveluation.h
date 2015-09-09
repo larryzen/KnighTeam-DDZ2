@@ -29,22 +29,6 @@ public:
 	int EveluateMove(CARDSMOVE* move,int whoseGo);
 	void EveluateMoves(vector<CARDSMOVE> *moves, int whoseGo);
 
-	int Evelute(CARDSMOVE move, int whoseGo);
-
-	int getMinIndexOfCombs(CombsLib combs);
-	void cutCarryCards(CARDSMOVE *move);
-	void cutCarryCardsMoves( vector<CARDSMOVE> *moves);
-
-	void cutCarryCards1(CARDSMOVE *move,
-		vector<unsigned> carryCards,int shouldCarryCards_num,int startIndex,int flag);
-
-	vector<unsigned> getMaxElementIndex(int *arr,unsigned len,int top_num);
-
-	void FilterForMoves(vector<CARDSMOVE> *moves,unsigned *cards);
-
-	int IsPlay3Single(vector<CARDSMOVE> moves, unsigned *cards);
-	int IsPlay4Couple(vector<CARDSMOVE> moves, unsigned *cards);
-	int IsPlay5Santiao(vector<CARDSMOVE> moves, unsigned *cards);
 
 	int IsAiPass();
 

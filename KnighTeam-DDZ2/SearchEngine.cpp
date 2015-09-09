@@ -9,7 +9,7 @@ using namespace std;
 
 CSearchEngine::CSearchEngine(void)
 {
-	
+	ddz_MM = DDZMoveManager();
 }
 
 
@@ -197,16 +197,45 @@ int CSearchEngine::GetAllGain(int turn)
 	return gain() + Spring(turn) + ReSpring(turn);
 }
 
+bool CSearchEngine::CanWin2(vector<CARDSMOVE> moves)
+{
+	ddz_MM.setMovesStatus(&moves);
+	int maxMovesNum = 0;
+	vector<CARDSMOVE> maxMoves = vector<CARDSMOVE>();
+	for (int i = 0; i < moves.size(); i++)
+	{
+		if (moves[i].status == STATUS_MAX && (moves[i].cardsType == ZHADAN || moves[i].cardsType==ROCKET))
+		{
+			maxMovesNum++;
+			maxMoves.push_back(moves[i]);
+		}
+	}
+
+	if (maxMovesNum >= (moves.size() - maxMovesNum))
+	{
+		for (int k = 0; k < maxMoves.size(); k++)
+		{
+			bool canPlay = CMoveGenerator().IsValidMove(Player::lastMove, maxMoves[k]);
+			if (canPlay)
+			{
+				bestMove = maxMoves[k];
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 bool CSearchEngine::CanWin(vector<CARDSMOVE> FirstMoves, int outWay)
 {
-	DDZMoveManager ddz_MM = DDZMoveManager();
-	if (outWay)
+	if (outWay==1 || outWay == 2)
 	{
 		ddz_MM.setMovesStatus(&FirstMoves);
 		if (ddz_MM.canPlayOver(FirstMoves))
 		{
 			int size = FirstMoves.size();
-			if (size == 1)
+			if (size == 1 && outWay == 1)
 			{
 				bestMove = FirstMoves[0];	
 			}
@@ -214,7 +243,7 @@ bool CSearchEngine::CanWin(vector<CARDSMOVE> FirstMoves, int outWay)
 			{
 				for (int i = 0; i < size; i++)
 				{
-					if (FirstMoves[i].status == STATUS_MAX)
+					if (FirstMoves[i].status == STATUS_MAX && outWay == 1)
 					{
 						bestMove = FirstMoves[i];
 						bestMove.side = 0;

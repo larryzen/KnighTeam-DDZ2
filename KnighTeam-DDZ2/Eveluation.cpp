@@ -1333,7 +1333,7 @@ int CEveluation::IsCurrentTeam(bool current_IsLandlord, int turn)
 */
 bool CEveluation::IsCardOriginator(int turn)
 {
-	return Player::firstPlayer == turn ? true : false;
+	return (Player::firstPlayer % 3) == turn ? true : false;
 }
 
 int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
@@ -1414,8 +1414,16 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		score-=200;//优先出非拆牌走步
 	}
 	
-	
-	if ((IsCardOriginator(turn) || (!current_IsLandlord && !next_IsLandlord)) 
+	if (currentCardsNum - current_cards.size() == 1)//打完剩下一张
+	{
+		score+=200;
+	}
+
+	if (currentCardsNum - current_cards.size() == 2)//打完剩下二张
+	{
+		score += 100;
+	}
+	if (((IsCardOriginator(turn) || (!current_IsLandlord && !next_IsLandlord)) && !outWay)
 			&& cardsType != PASS)
 	{
 		score += (D - current_cards[0]) * 200;//自己主动出牌发起者，尽量走最小
@@ -1449,7 +1457,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			if (Player::lastMove.cardsType != INVALID)
 			{
 				int value = Player::lastMove.cards[0];
-				if (value >= A)
+				if (value >= K)
 				{
 					score-=1000;//伙伴方出大牌我方不管
 				}
@@ -1513,14 +1521,14 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			}
 		case ROCKET:
 		{
-			score-=15000;
+			score-=8000;
 			break;
 		}
 		
 
 		case ZHADAN:
 		{
-					score-=15000;
+					score-=8000;
 					
 					break;
 		}
@@ -1620,10 +1628,10 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		{
 			int threeTiaoValue=play->getSanTiaoValue(current_cards);
 
-			if (currentValue == T && outWay)
+		/*	if (currentValue == T && outWay)
 			{
 				score -= 10000;
-			}
+			}*/
 
 			if (turn == 0 && outWay)
 			{
@@ -1652,10 +1660,10 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			
 			
 
-			if (currentValue == T && outWay)
+			/*if (currentValue == T && outWay)
 			{
 				score -= 10000;
-			}
+			}*/
 		}
 		break;
 
@@ -1677,10 +1685,10 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			
 			
 
-			if (currentValue == T && outWay)
+			/*if (currentValue == T && outWay)
 			{
 				score -= 10000;
-			}
+			}*/
 		}
 		break;
 
@@ -1690,7 +1698,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			int startValue = cardsInfo.at(0);
 			int endValue = cardsInfo.at(1);
 
-			score += ((endValue - startValue + 1) * 100);//优先出长的单顺
+			score += ((endValue - startValue + 1) * 200);//优先出长的单顺
 		}
 		break;
 
@@ -1757,40 +1765,6 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 	return score;
 }
 
-
-int CEveluation::Evelute(CARDSMOVE move, int whoseGo)
-{	
-	int cardsValue = move.cards[0]; //牌面值
-	int outWay = move.outWay;//出牌方式
-	bool current_IsLandlord, next_Islandlord;
-	int key = 1;
-	int score = 0;
-	int turn = whoseGo % 3;
-	if (turn == 0)
-	{
-		current_IsLandlord = Player::p3_IsLandlord;
-		next_Islandlord = Player::p1_IsLandlord;
-	}
-	else if (turn == 1)
-	{
-		current_IsLandlord = Player::p1_IsLandlord;
-		next_Islandlord = Player::p2_IsLandlord;
-	}
-	else
-	{
-		current_IsLandlord = Player::p2_IsLandlord;
-		next_Islandlord = Player::p3_IsLandlord;
-	}
-
-	if (!current_IsLandlord)
-	{
-		key = -1;
-	}
-	score += (key * (D - cardsValue) * 5);//优先出小牌
-
-
-	return score;
-}
 void CEveluation::EveluateMoves(vector<CARDSMOVE> *moves, int whoseGo)
 {
 	for (int i = moves->size() - 1; i >= 0; i--)
@@ -1799,553 +1773,6 @@ void CEveluation::EveluateMoves(vector<CARDSMOVE> *moves, int whoseGo)
 	}
 }
 
-void CEveluation::cutCarryCards(CARDSMOVE *move)
-{
-	int cardsType = move->cardsType;
-	DDZPlayer play = DDZPlayer();
-	vector<unsigned> cardsInfo;
-	vector<unsigned> canCarryCards;
-	if(cardsType==THREE_ONE || cardsType == THREEJUNKO_ONE)
-	{
-		cardsInfo = play.getThree_OneValue(move->cards);
-		canCarryCards = VectorUtil::subVector(2,cardsInfo);
-		if(cardsType == THREE_ONE)
-		{	
-			cutCarryCards1(move, canCarryCards, 1, 3, 1);
-		}
-		else
-		{
- 			int start = cardsInfo.at(0);
-			int end = cardsInfo.at(1);
-			int junkoNum = end-start+1;
-			canCarryCards = VectorUtil::subVector(2,cardsInfo);
-
-			cutCarryCards1(move, canCarryCards, junkoNum , 3 * junkoNum,1);
-		}
-		
-	}
-	else if(cardsType == THREE_TWO || cardsType == THREEJUNKO_TWO)
-	{
-		cardsInfo = play.getThree_TwoValue(move->cards);
-		canCarryCards = VectorUtil::subVector(2,cardsInfo);
-
-		if(cardsType == THREE_TWO)
-		{	
-			cutCarryCards1(move, canCarryCards, 2, 3, 0);
-		}
-		else
-		{
- 			int start = cardsInfo.at(0);
-			int end = cardsInfo.at(1);
-			int junkoNum = end-start+1;
-			canCarryCards = VectorUtil::subVector(2,cardsInfo);
-
-			cutCarryCards1(move, canCarryCards, 2 * junkoNum, 3 * junkoNum, 0);
-		}
-	}
-	else if(cardsType==FOUR_TWO)
-	{
-		cardsInfo = play.getFour_TwoValue(move->cards);
-		canCarryCards = VectorUtil::subVector(1,cardsInfo);
-
-		cutCarryCards1(move, canCarryCards, 2, 4, 1);
-	}
-	else if(cardsType == FOUR_TWO_COUPLE)
-	{
-		cardsInfo = play.getFour_TwoCoupleValue(move->cards);
-		canCarryCards = VectorUtil::subVector(1,cardsInfo);
-
-		cutCarryCards1(move, canCarryCards, 4, 4, 0);
-	}
-	else
-	{
-		return ;
-	}
-}
-
-void CEveluation::cutCarryCardsMoves(vector<CARDSMOVE> *moves)
-{
-	for (int i = moves->size() - 1; i >= 0;i--)
-	{
-		cutCarryCards(&moves->at(i));// 估值剪掉带牌
-	}
-}
-
-void CEveluation::FilterForMoves(vector<CARDSMOVE> *moves,unsigned *cards)
-{
-	DDZMoveManager ddz_MM = DDZMoveManager();
-	vector<CARDSMOVE> singleJunko = ddz_MM.getType8SingleJunko(*moves);
-
-
-	for(size_t i=0;i < singleJunko.size();i++)
-	{
-		vector<CARDSMOVE>::iterator it ;
-		int len =  singleJunko[i].cards.size();
-		int single = 0, couple = 0, santiao = 0, bomb = 0;
-		for(size_t j=0;j<len;j++)
-		{
-			int value = singleJunko[i].cards[j];
-			
-			if(cards[value]==1)
-			{
-				single++;
-			}
-			else if(cards[value]==2)
-			{
-				couple++;
-			}
-			else if(cards[value]==3)
-			{
-				santiao++;
-			}
-			else 
-			{
-				bomb++;
-			}
-		}
-		
-		if(single < (couple + santiao + 2 * bomb))
-		{
-			it = singleJunko.begin()+i;
-			moves->erase(it);
-		}
-		
-	}
-}
-
-
-/** 
-*		对三带单/双、三顺带单/双进行剪带牌操作
-*
-*		@*move 被剪带牌的走步
-*		@canCarryCards 带牌
-*		@shouldCarryCards_num 应该带的牌数
-*		@startIndex 带牌之前的坐标（不进行剪牌操作）
-*		@flag 带的是单牌还是对牌？
-*/
-void CEveluation::cutCarryCards1(CARDSMOVE *move,
-								 vector<unsigned> canCarryCards,int shouldCarryCards_num,
-								 int startIndex, int  flag)
-{
-	int carryCards_Score[17]={0};
-	int carryNum=canCarryCards.size();
-	DDZMoveManager ddz_MM= DDZMoveManager();
-	vector<CARDSMOVE> tmp_moves;
-	vector<CARDSMOVE> single= ddz_MM.getGoodMove3Single(Player::p3_allMoves,tmp_moves,Player::p3_EachCardNum,1);
-	vector<CARDSMOVE> couple= ddz_MM.getGoodMove4Couple(Player::p3_allMoves,tmp_moves,Player::p3_EachCardNum,1);
-
-	if(flag)
-	{
-		if(single.size() > 0 && couple.size() > 0)
-		{
-			if(single[0].cards[0] > couple[0].cards[0])
-			{
-				move->score-=20;
-			}
-		}
-	}
-	else
-	{
-		if(single.size() > 0 && couple.size() > 0)
-		{
-			if(single[0].cards[0] < couple[0].cards[0])
-			{
-				move->score-=20;
-			}
-		}
-	}
-
-	for(size_t i=0;i<canCarryCards.size();i++)
-	{
-		if(flag)
-		{
-			if(ddz_MM.IsRelateMoves(single,canCarryCards[i]))
-			{
-				carryCards_Score[i]+=60;
-			}
-			else
-			{
-				carryCards_Score[i]-=30;
-			}
-		}
-		else
-		{
-			if(ddz_MM.IsRelateMoves(couple,canCarryCards[i]))
-			{
-				carryCards_Score[i]+=60;
-			}
-			else
-			{
-				carryCards_Score[i]-=30;
-			}
-		}
-	}
-	vector<unsigned> carryCardsIndex=getMaxElementIndex(carryCards_Score,canCarryCards.size(),shouldCarryCards_num);
-	
-	for(size_t i=move->cards.size()-1;i>=startIndex;i--)
-	{
-		bool IsDelete = true;
-		for(size_t j=0;j<carryCardsIndex.size();j++)
-		{
-			if(canCarryCards[carryCardsIndex[j]]==move->cards[i])
-			{
-				IsDelete = false;
-				if (carryCards_Score[carryCardsIndex[j]] < 0)
-				{
-					move->score -=30;
-				}
-			}
-		}
-
-		if (IsDelete)
-		{
-			vector<unsigned>::iterator it = move->cards.begin();
-			move->cards.erase(it+i);
-		}
-	}
-}
-
-//// 三带双、三顺带双剪掉带牌
-//void CEveluation::cutCarryCards2(Player p,CARDSMOVE *move,vector<unsigned> canCarryCards,int shouldCarryCards_num)
-//{
-//	int carryCards_Score[17]={0};
-//	int carryNum=canCarryCards.size();
-//	DDZMoveManager ddz_MM= DDZMoveManager();
-//	vector<CARDSMOVE> tmp_moves;
-//	vector<CARDSMOVE> couple= ddz_MM.getGoodMove4Couple(Player::p3_allMoves,tmp_moves,p.p3_EachCardNum,1);
-//	
-//	for(size_t i=0;i<canCarryCards.size();i++)
-//	{
-//		if(ddz_MM.IsRelateMoves(couple,canCarryCards[i]))
-//		{
-//			carryCards_Score[i]+=60;
-//		}
-//		else
-//		{
-//			carryCards_Score[i]-=30;
-//		}
-//	}
-//
-//	vector<unsigned> carryCardsIndex=getMaxElementIndex(carryCards_Score,canCarryCards.size(),shouldCarryCards_num);
-//	
-//	for(size_t i=move->cards.size()-1;i>=3*shouldCarryCards_num/2;i--)
-//	{
-//		bool flag = true;
-//		for(size_t j=0;j<carryCardsIndex.size();j++)
-//		{
-//			if(canCarryCards[carryCardsIndex[j]]==move->cards[i])
-//			{
-//				flag=false;	
-//			}
-//		}
-//
-//		if(flag)
-//		{
-//			vector<unsigned>::iterator it = move->cards.begin();
-//			move->cards.erase(it+i);
-//		}
-//	}
-//}
-//
-//// 四带二单剪掉带牌
-//void CEveluation::cutCarryCards3(Player p,CARDSMOVE *move,vector<unsigned> canCarryCards,int shouldCarryCards_num)
-//{
-//	int carryCards_Score[17]={0};
-//	int carryNum=canCarryCards.size();
-//	DDZMoveManager ddz_MM= DDZMoveManager();
-//	vector<CARDSMOVE> tmp_moves;
-//	vector<CARDSMOVE> couple= ddz_MM.getGoodMove4Couple(p.p3_allMoves,tmp_moves,p.p3_EachCardNum,1);
-//	
-//	for(size_t i=0;i<canCarryCards.size();i++)
-//	{
-//		if(ddz_MM.IsRelateMoves(couple,canCarryCards[i]))
-//		{
-//			carryCards_Score[i]+=60;
-//		}
-//		else
-//		{
-//			carryCards_Score[i]-=30;
-//		}
-//	}
-//	vector<unsigned> carryCardsIndex=getMaxElementIndex(carryCards_Score,canCarryCards.size(),2);
-//	
-//	for(size_t i=move->cards.size()-1;i>=4;i--)
-//	{
-//		bool flag = true;
-//		for(size_t j=0;j<carryCardsIndex.size();j++)
-//		{
-//			if(canCarryCards[carryCardsIndex[j]]==move->cards[i])
-//			{
-//				flag=false;	
-//			}
-//		}
-//
-//		if(flag)
-//		{
-//			vector<unsigned>::iterator it = move->cards.begin();
-//			move->cards.erase(it+i);
-//		}
-//	}
-//}
-//
-//// 四带二对剪掉带牌
-//void CEveluation::cutCarryCards4(Player p,CARDSMOVE *move,vector<unsigned> canCarryCards,int shouldCarryCards_num)
-//{
-//	int carryCards_Score[17]={0};
-//	int carryNum=canCarryCards.size();
-//	for(size_t i=0;i<canCarryCards.size();i++)
-//	{
-//		
-//	}
-//	vector<unsigned> carryCardsIndex=getMaxElementIndex(carryCards_Score,canCarryCards.size(),4);
-//	
-//	for(size_t i=move->cards.size()-1;i>=4;i--)
-//	{
-//		bool flag = true;
-//		for(size_t j=0;j<carryCardsIndex.size();j++)
-//		{
-//			if(canCarryCards[carryCardsIndex[j]]==move->cards[i])
-//			{
-//				flag=false;	
-//			}
-//		}
-//
-//		if(flag)
-//		{
-//			vector<unsigned>::iterator it = move->cards.begin();
-//			move->cards.erase(it+i);
-//		}
-//	}
-//}
-//
-
-/** 获得数组元素中最大的几个元素 
-*  @arr					数组
-*  @len					数组长度
-*  @top_num		多少个元素
-*
-*/
-vector<unsigned> CEveluation::getMaxElementIndex(int arr[15],unsigned len,int top_num)
-{
-	vector<unsigned> top_vec;
-	int tmp_arr[15];
-	memcpy(tmp_arr, arr, sizeof(tmp_arr));
-
-	int maxIndex=0;
-
-	while(top_num--)
-	{
-		for(size_t i=1;i<len;i++)
-		{
-			if (tmp_arr[i]>tmp_arr[maxIndex] && !VectorUtil::isContains(top_vec, i))
-			{
-				maxIndex=i;
-			}
-		}
-
-		top_vec.push_back(maxIndex);
-		tmp_arr[maxIndex] = -999;
-		maxIndex=0;
-
-	}
-
-	return top_vec;
-}
-
-
-/**
-*  此函数只针对我方进行判断
-*  
-*/
-//bool IsPassMove(Player p)
-//{
-//	if(p.p2_IsLandlord)
-//	{
-//		if(p.lastPlayer==1)
-//		{
-//			return true;
-//		}
-//
-//		if(p.firstPlayer==2&&IsBadMove(p)&&IsNotSickMove(p))
-//		{
-//			return true;
-//		}
-//
-//		if(p.firstPlayer==1&&IsBadMove(p))
-//		{
-//			return true;
-//		}
-//	}
-//	else if(p.p1_IsLandlord)
-//	{
-//		if(p.lastPlayer==2&&IsTopMove(p))
-//		{
-//			return true;
-//		}
-//
-//		if(p.lastPlayer==2&&IsBadMove(p))
-//		{
-//			return true;
-//		}
-//	}
-//	else 
-//	{
-//		if(IsBadMove(p))
-//		{
-//			return true;
-//		}
-//	}
-//}
-//
-//bool IsBadMove(Player p)
-//{
-//	return false;
-//}
-//
-//bool IsNotSickMove(Player p)
-//{
-//	return false;
-//}
-//
-//bool IsTopMove(Player p)
-//{
-//	return false;
-//}
-
-/**
-*  在指定的范围中，牌的数量为对牌（单牌或三条、四个）的个数
-*  @array 牌的数组形式
-*  @num   指定的数量
-*  @start 开始范围
-*  @end   结束范围
-*/
-unsigned ComputeTotalOfNum(int *array,int num,unsigned start,unsigned end)
-{
-	unsigned count=0;
-	unsigned len;
-
-	GET_ARRAY_LEN(array,len);
-
-	for(unsigned i=start;i<len&&i<=end;i++)
-	{
-		if(array[i]>=num)
-		{
-			count++;
-		}
-	}
-
-	return count;
-}
-
-
-int CEveluation::getMinIndexOfCombs(CombsLib combs)
-{
-	int min=0;
-	for(size_t i=1;i<combs.size();i++)
-	{
-		if(combs[i].moves.size()<combs[min].moves.size())
-		{
-			min=i;
-		}
-	}
-
-	return min;
-}
-
-vector<unsigned> CEveluation::haveZhaDanOutside()
-{
-	vector<unsigned> zhaDans;
-	for(size_t i=0;i<13;i++)
-	{
-		if(Player::remaining[i]==4)
-		{
-			zhaDans.push_back(i); 
-		}
-	}
-
-	return zhaDans;
-}
-
-vector<unsigned> CEveluation::haveZhaDanP2()
-{
-	vector<unsigned> zhaDans;
-
-	for(size_t i=0;i<13;i++)
-	{
-		if(Player::p2_EachCardNum[i]==4)
-		{
-			zhaDans.push_back(i);
-		}
-	}
-
-	return zhaDans;
-}
-
-vector<unsigned> CEveluation::haveZhaDanP1()
-{
-	vector<unsigned> zhaDans;
-
-	for(size_t i=0;i<13;i++)
-	{
-		if(Player::p1_EachCardNum[i]==4)
-		{
-			zhaDans.push_back(i);
-		}
-	}
-
-
-	return zhaDans;
-}
-
-
-int CEveluation::IsPlay3Single(vector<CARDSMOVE> moves,unsigned *cards)
-{
-	DDZMoveManager ddz_MM = DDZMoveManager();
-	vector<CARDSMOVE> tmp_single;
-	vector<CARDSMOVE> single = ddz_MM.getGoodMove3Single(moves,tmp_single,cards,1);
-	unsigned santiao_Num = ddz_MM.getGoodMove5Santiao(moves,tmp_single,cards,1).size();
-	int k = single.size() - santiao_Num;
-	if(single.size()>0 && k >= 4 && single[0].cards[0]<7)
-	{
-		return 1;
-	}
-
-	return 0;
-}
-
-int CEveluation::IsPlay4Couple(vector<CARDSMOVE> moves, unsigned *cards)
-{
-	DDZMoveManager ddz_MM = DDZMoveManager();
-	vector<CARDSMOVE> tmp_couple;
-	vector<CARDSMOVE> couple = ddz_MM.getGoodMove4Couple(moves,tmp_couple,cards,1);
-	
-	if(couple.size() >=4)
-	{
-		return 1;
-	}
-
-	return 0;
-}
-
-int CEveluation::IsPlay5Santiao(vector<CARDSMOVE> moves,unsigned *cards)
-{
-	DDZMoveManager ddz_MM = DDZMoveManager();
-	vector<CARDSMOVE> tmp_couple;
-	vector<CARDSMOVE> santiao = ddz_MM.getGoodMove5Santiao(moves,tmp_couple,cards,1);
-	
-	if(santiao.size() >=3)
-	{
-		return 1;
-	}
-
-	if(santiao.size() >=2 && santiao[santiao.size()-1].cards[0]>7)
-	{ 
-		return 1;
-	}
-
-	return 0;
-
-}
 /**
 *	首攻
 */

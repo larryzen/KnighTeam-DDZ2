@@ -54,7 +54,7 @@ public:
 
 	vector<CARDSMOVE> dealMoves(vector<CARDSMOVE> moves,unsigned *cards);
 	int getMaxScoreMove(vector<CARDSMOVE> moves);
-	vector<CARDSMOVE> getCombBySocre();
+
 
 	vector<CARDSMOVE> getGoodMove3Single(vector<CARDSMOVE> moves,
 												vector<CARDSMOVE> single,unsigned *cards,int flag);

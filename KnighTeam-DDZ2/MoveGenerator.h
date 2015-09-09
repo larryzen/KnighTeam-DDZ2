@@ -32,7 +32,7 @@ public:
 
 	
 	vector<int> subVector(vector<int> v,unsigned start,unsigned end);
-
+	bool IsValidMove(CARDSMOVE m1, CARDSMOVE m2);
 private:
 	vector<CARDSMOVE> getMovesByCombMovesForOneMove(CARDSMOVE key, vector<CARDSMOVE> moves);
 	void FinalMovesDeal(vector<CARDSMOVE> *moves, int turn);
@@ -41,7 +41,7 @@ private:
 	bool HaveDualJunko(unsigned start, unsigned JunkoNum, unsigned *cards);
 	bool HaveThreeJunko(unsigned start, unsigned JunkoNum, unsigned *cards);
 
-	bool IsValidMove(CARDSMOVE m1, CARDSMOVE m2);
+	
 	bool IsValidJunkoMove(vector<unsigned> cardsInfo1, vector<unsigned> cardsInfo2);
 
 	vector<CARDSMOVE> getMovesBy01Card(unsigned *cards);

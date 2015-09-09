@@ -12,7 +12,7 @@ public:
 	static vector<unsigned> subVector(unsigned index,vector<unsigned> vi);
 	static vector<unsigned> subVector(unsigned start_i,unsigned end_i,vector<unsigned> vi);
 	
-	static bool isContains(vector<unsigned> vi,unsigned n);
+	static bool isContains(vector<unsigned> vi, unsigned n);
 	static bool IsContainsVector(vector<vector<unsigned>> vv, vector<unsigned> vi);
 
 	static bool IsSameVector(vector<unsigned> v1, vector<unsigned> v2);

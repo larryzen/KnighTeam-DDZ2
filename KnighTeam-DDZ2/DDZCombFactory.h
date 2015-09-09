@@ -53,7 +53,7 @@ public:
 		bool IsSameComb(Comb c1, Comb c2);
 		bool IsContainsComb(CombsLib combs, Comb comb);
 
-		void quickSort(int *arr, int first, int last, int len);
+		void quickSort(unsigned *arr, int first, int last, int len);
 		
 		void setSingleNum(Comb *comb);
 		void setSantiaoNum(Comb *comb);

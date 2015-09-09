@@ -4,6 +4,7 @@
 #include "MoveGenerator.h"
 #include "Eveluation.h"
 #include "define.h"
+#include "DDZMoveManager.h"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ public:
 	CARDSMOVE bestMove;
 
 	bool CanWin(vector<CARDSMOVE> FirstMoves, int outWay);
+	bool CanWin2(vector<CARDSMOVE> moves);
 //	virtual vector<int> SearchAGoodMove(Player p);
 
 
@@ -33,5 +35,6 @@ private:
 	int Spring(int turn);
 	int ReSpring(int turn);
 	int GetAllGain(int turn);
+	DDZMoveManager ddz_MM;
 };
 

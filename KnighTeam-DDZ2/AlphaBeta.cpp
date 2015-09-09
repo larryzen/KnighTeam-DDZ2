@@ -13,7 +13,7 @@ AlphaBeta::AlphaBeta(void)
 	ddz_MM = DDZMoveManager();
 	initBestMoveLinkList();
 	init_EXPAND_DEPTH();
-	
+	IsGetAGoodMove = false;
 	
 };
 
@@ -29,14 +29,14 @@ void AlphaBeta::init_EXPAND_DEPTH()
 	if (Player::p3_cardsNum >= 17)
 	{
 		EXPAND_DEPTH = 1; //防止第一手出牌搜索时间过久
-		TOTAL_DEPTH = 3;
-		SEARCH_TIME = 2;
+		TOTAL_DEPTH = 1;
+		SEARCH_TIME = 1;
 	}
 	else
 	{
-		EXPAND_DEPTH = 3;
-		TOTAL_DEPTH = 9;
-		SEARCH_TIME = 2;
+		EXPAND_DEPTH = 1;
+		TOTAL_DEPTH = 1;
+		SEARCH_TIME = 1;
 	}
 
 }
@@ -51,6 +51,8 @@ void AlphaBeta::initBestMoveLinkList()
 		BestMoveLinkList[i] = 0;
 	}
 }
+
+
 int AlphaBeta::SearchAGoodMove(int nDepth)
 {
 	int SimulateTimes = 5;
@@ -61,21 +63,30 @@ int AlphaBeta::SearchAGoodMove(int nDepth)
 	ddz_CF.setCarryCards3_1(&mustWin);
 	CardsTypeNumCount(mustWin);
 
+	
 	while (true)
 	{
 		
 		SearchAGoodMove(nDepth, -1);
 
+		
 		int i = getMaxScoreIndex(FirstMoves);
 		if (FirstMoves.size() == 1)
 		{
 			return 0;
 		}
 
-		if (CanWin(mustWin, FirstMoves[0].outWay))
+		if (CanWin(mustWin, FirstMoves[0].outWay))//主动出牌必胜局面
 			return 0;
 
-		
+		if (CanWin2(mustWin))//被动出牌必胜（炸、火箭)
+		{
+			return 0;
+		}
+		if (IsGetAGoodMove)//被动出牌必胜(极大值走步）
+		{
+			return 0;
+		}
 		if (i != -1)
 		{
 			BestMoveLinkList[i]++;
@@ -139,7 +150,7 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 			FirstMoves[nodeIndex].lose +=1;
 		}
 		FirstMoves[nodeIndex].Count++;
-		FirstMoves[nodeIndex].score += (result *(1000 + (AlphaBeta_Depth - nDepth) * 300));//加入区分赢的深度，越浅越好
+		//FirstMoves[nodeIndex].score += (result *(400 + (TOTAL_DEPTH - nDepth) * 50));//加入区分赢的深度，越浅越好
 		return  0;
 	}
 
@@ -155,7 +166,7 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 	//}
 
 	
-	ddz_Eve->PositiveSimulatedMenu();
+	//ddz_Eve->PositiveSimulatedMenu();
 	ddz_Eve->EveluateMoves(&moves, nDepth);
 
 	
@@ -179,11 +190,24 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 				return 0;
 			}
 		}
-		
+		ddz_MM.setMovesStatus(&moves);
 		for (size_t i = 0; i < moves.size(); i++)
 		{
 			MakeMove(moves[i], nDepth);
+			DDZCombFactory ddz_CF = DDZCombFactory(Player::p3_EachCardNum, Player::p3_cardsNum);
+			vector<CARDSMOVE> mustWin = ddz_CF.getComb1LeastSingle().moves;
+			ddz_CF.setCarryCards1_1(&mustWin);
+			ddz_CF.setCarryCards3_1(&mustWin);
+			CardsTypeNumCount(mustWin);
 			
+			if (CanWin(mustWin, 2) && moves[i].status==STATUS_MAX)
+			{
+				bestMove = moves[i];
+				IsGetAGoodMove = true;
+				UnMakeMove(moves[i], nDepth);
+				return 0;
+			}
+				
 
 			if (nDepth == 0)
 				SearchAGoodMove(nDepth + 1, i);
@@ -276,17 +300,12 @@ int	AlphaBeta::getMaxScoreIndex(vector<CARDSMOVE> moves)
 	double currentWin = 0;
 
 
-	if (!moves.empty() && moves[moves.size() - 1].cardsType == PASS)
-	{
-		moves[moves.size() - 1].score<0 ? moves[moves.size() - 1].score * 3 : moves[moves.size() - 1].score / 3;
-	}
+	//if (!moves.empty() && moves[moves.size() - 1].cardsType == PASS)
+	//{
+	//	moves[moves.size() - 1].score<0 ? moves[moves.size() - 1].score * 3 : moves[moves.size() - 1].score / 3;
+	//}
 	for (size_t i = 0; i < moves.size(); i++)
 	{
-		if ((moves[i].cardsType==ROCKET || moves[i].cardsType==ZHADAN) 
-				&& moves[i].score<-10000)
-		{
-			continue;
-		}
 		if ((moves[i].score) > current)
 		{
 			current = (moves[i].score);

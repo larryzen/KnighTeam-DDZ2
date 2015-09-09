@@ -52,7 +52,7 @@ vector<unsigned> VectorUtil::subVector(unsigned start_i,unsigned end_i,vector<un
 	return back_vi;
 }
 
-bool VectorUtil::isContains(vector<unsigned> vi,unsigned n)
+bool VectorUtil::isContains(vector<unsigned> vi, unsigned n)
 {
 	for(size_t i=0;i<vi.size();i++)
 	{

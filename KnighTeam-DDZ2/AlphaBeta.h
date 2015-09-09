@@ -43,5 +43,7 @@ private:
 	int SEARCH_TIME;
 	double cpy_p1_MemberShip[TOTAL_KINDS], cpy_p2_MemberShip[TOTAL_KINDS];
 
+	bool IsGetAGoodMove;
+
 };
 

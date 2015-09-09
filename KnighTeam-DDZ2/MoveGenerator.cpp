@@ -2282,7 +2282,7 @@ vector<CARDSMOVE> CMoveGenerator::getMovesByType14Four_TwoCouple(unsigned Four_T
 
 /**
 *	两种走步能否管上（即一种走步能否大过另一种走步）
-*	@m1 一种走步
+*	@m1 被管走步
 *  @m2 能否管上m1的走步
 *
 */
