@@ -11,6 +11,7 @@ AlphaBeta::AlphaBeta(void)
 	bestMove = CARDSMOVE();
 	FirstMoves = vector<CARDSMOVE>();
 	ddz_MM = DDZMoveManager();
+	ddz_Eve = CEveluation();
 	initBestMoveLinkList();
 	init_EXPAND_DEPTH();
 	IsGetAGoodMove = false;
@@ -59,8 +60,8 @@ int AlphaBeta::SearchAGoodMove(int nDepth)
 	start = clock();
 	DDZCombFactory ddz_CF = DDZCombFactory(Player::p3_EachCardNum, Player::p3_cardsNum);
 	vector<CARDSMOVE> mustWin = ddz_CF.getComb1LeastSingle().moves;
-	ddz_CF.setCarryCards1_1(&mustWin);
-	ddz_CF.setCarryCards3_1(&mustWin);
+	ddz_CF.setCarryCards1_1ForSantiao(&mustWin);
+	ddz_CF.setCarryCards3_1ForThreeJunko(&mustWin);
 	CardsTypeNumCount(mustWin);
 
 	
@@ -75,18 +76,69 @@ int AlphaBeta::SearchAGoodMove(int nDepth)
 		{
 			return 0;
 		}
-
-		if (CanWin(mustWin, FirstMoves[0].outWay))//主动出牌必胜局面
+		if (CanWin(mustWin, FirstMoves[0].outWay))//主动出牌必胜局面，（剩余牌中）
 			return 0;
 
-		if (CanWin2(mustWin))//被动出牌必胜（炸、火箭)
-		{
-			return 0;
-		}
 		if (IsGetAGoodMove)//被动出牌必胜(极大值走步）
 		{
 			return 0;
 		}
+
+		// 我方为地主，农民任意一方只剩1张牌,且我方为主动出牌
+		if (Player::p3_IsLandlord)
+		{
+			if (FirstMoves[0].outWay && (Player::p1_cardsNum == 1 || Player::p2_cardsNum == 1))
+			{
+				FinalDeal();
+				return 0;
+			}
+		}
+		else//为农民方，则。。。
+		{
+			if (Player::p2_IsLandlord && Player::p2_cardsNum == 1)//地主下家农民
+			{
+				if (FirstMoves[0].outWay)//主动出牌
+				{
+					CanFinishGame();
+					return 0;
+				}
+				else
+				{
+					//CanFinishGame();
+				}
+			}
+			else if (Player::p1_IsLandlord && Player::p1_cardsNum == 1)//地主上家农民
+			{
+				if (FirstMoves[0].outWay)//主动出牌
+				{
+					CanFinishGame();
+					return 0;
+				}
+				else
+				{
+					//CanFinishGame();
+				}
+			}
+		}
+	
+		if (!FirstMoves[0].outWay && CanWin2(mustWin))//被动出牌必胜（炸、火箭)
+		{
+			return 0;
+		}
+		//主动出牌必胜（炸、火箭)
+		if (FirstMoves[0].outWay && CanWin3(mustWin))
+		{
+			return 0;
+		}
+
+		//被动出牌必胜大王（管其他玩家牌）、22、66、333
+		if (!FirstMoves[0].outWay && CanWin4(mustWin))
+		{
+			return 0;
+		}
+
+		
+
 		if (i != -1)
 		{
 			BestMoveLinkList[i]++;
@@ -112,6 +164,150 @@ int AlphaBeta::SearchAGoodMove(int nDepth)
 	return 0;
 }
 
+void AlphaBeta::CanFinishGame()
+{
+	int topCard = getTopCardInRemaining();
+
+	DDZCombFactory ddz_CF = DDZCombFactory(Player::p3_EachCardNum, Player::p3_cardsNum);
+	Comb cb = ddz_CF.getComb4Final();
+	vector<CARDSMOVE> moves = cb.moves;
+
+	int singleNum = cb.singleNum;
+	ddz_CF.setCarryCards1_3ForSantiao(&moves, topCard);
+	ddz_CF.setCarryCards3_2ForThreeJunko(&moves);
+
+	if (singleNum + cb.gain * 2 <= 1)//不用四带二单，单牌也只有一张
+	{
+		getAGoodMoveAsOnlyOneCard(moves);
+	}
+	else
+	{
+		ddz_CF.setCarryCards5ForZhaDan(&moves);
+		if (singleNum <= 1)//单牌只有一张
+		{
+			getAGoodMoveAsOnlyOneCard(moves);
+		}
+		else
+		{
+			bool IsGetAMove = false;;
+			for (int i = 0; i < moves.size(); i++)
+			{
+				if (moves[i].cardsType != SINGLE && moves[i].cardsType != ZHADAN
+					&& moves[i].cardsType != ROCKET && moves[i].cardsType != FOUR_TWO)
+				{
+					bestMove = moves[i];
+					IsGetAMove = true;
+					break;
+				}
+			}
+			for (int i = 0; i < moves.size() && !IsGetAMove; i++)
+			{
+				if (moves[i].cardsType != SINGLE && moves[i].cardsType!=ZHADAN && moves[i].cardsType!=ROCKET)
+				{
+					bestMove = moves[i];
+					IsGetAMove = true;
+					break;
+				}
+			}
+
+			vector<unsigned> singles = vector<unsigned>();
+
+			for (int i = 0; i < moves.size() && !IsGetAMove; i++)
+			{
+				if (moves[i].cardsType ==SINGLE)
+				{
+					singles.push_back(moves[i].cards[0]);
+				}	
+			}
+			if (singles.size()>0)
+			{
+				DDZCombFactory::quickSort(&singles[0], 0, singles.size() - 1, singles.size());
+				CARDSMOVE m = CARDSMOVE();
+				VectorUtil::addElement(&m.cards, singles[singles.size() - singleNum + 1], 1);
+				m.cardsType = SINGLE;
+				bestMove = m;
+				IsGetAMove = true;
+			}
+
+
+
+			for (int i = 0; i < moves.size() && !IsGetAMove; i++)
+			{
+				bestMove = moves[i];
+				IsGetAMove = true;
+				break;
+			}
+			
+		}
+	}
+
+	bestMove.side = 0;
+}
+
+int AlphaBeta::getTopCardInRemaining()
+{
+	int top = D;
+	while (Player::remaining[top] == 0)
+	{
+		top--;
+	}
+
+	return top;
+}
+void AlphaBeta::FinalDeal()
+{
+	int topCard = getTopCardInRemaining();
+	DDZCombFactory ddz_CF = DDZCombFactory(Player::p3_EachCardNum, Player::p3_cardsNum);
+	Comb cb = ddz_CF.getComb4Final();
+	vector<CARDSMOVE> moves = cb.moves;
+
+	int singleNum = cb.singleNum;
+	ddz_CF.setCarryCards1_3ForSantiao(&moves, topCard);
+	ddz_CF.setCarryCards3_2ForThreeJunko(&moves);
+
+	
+	if (singleNum + cb.gain * 2 <= 1)//不用四带二单，单牌也只有一张
+	{
+		getAGoodMoveAsOnlyOneCard(moves);
+	}
+	else
+	{
+		ddz_CF.setCarryCards5ForZhaDan(&moves);
+		if (singleNum <= 1)//单牌只有一张
+		{
+			getAGoodMoveAsOnlyOneCard(moves);
+		}
+		else
+		{
+			bool IsGetAMove = false;
+			vector<unsigned> singles = vector<unsigned>();
+
+			for (int i = 0; i < moves.size() && !IsGetAMove; i++)
+			{
+				if (moves[i].cardsType == SINGLE)
+				{
+					singles.push_back(moves[i].cards[0]);
+				}
+			}
+			if (singles.size()>0)
+			{
+				DDZCombFactory::quickSort(&singles[0], 0, singles.size() - 1, singles.size());
+				
+				CARDSMOVE m = CARDSMOVE();
+				VectorUtil::addElement(&m.cards, singles[singles.size() - singleNum + 1], 1);
+				m.cardsType = SINGLE;
+				bestMove = m;
+				IsGetAMove = true;
+			}
+			else
+			{
+				bestMove= moves[0];
+			}
+		}
+	}
+
+	bestMove.side = 0;
+}
 int AlphaBeta::getMaxTimesBestMove()
 {
 	int current = 0;
@@ -126,6 +322,42 @@ int AlphaBeta::getMaxTimesBestMove()
 	}
 
 	return index;
+}
+
+void AlphaBeta::getAGoodMoveAsOnlyOneCard(vector<CARDSMOVE> moves)
+{
+	int current = -99999;
+	int index = -1;
+	for (int i = 0; i < moves.size(); i++)
+	{
+		if (moves[i].cardsType != SINGLE)//出非单牌中估值最高的走步
+		{
+			ddz_Eve.EveluateMove(&moves[i], 0);
+			if (current <= moves[i].score)
+			{
+				moves[i].outWay = 1;
+				current = moves[i].score;
+				index = i;
+			}
+		}
+	}
+	if (index != -1)
+	{
+		bestMove = moves[index];
+		return;
+	}
+	else
+	{
+		if (!moves.empty())// 其他牌型均出完，则出单牌
+		{
+			bestMove = moves[0];
+			return;
+		}
+		else
+		{
+			NULL_MOVE(bestMove);
+		}
+	}
 }
 int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 {
@@ -196,8 +428,8 @@ int AlphaBeta::SearchAGoodMove(int nDepth, int nodeIndex)
 			MakeMove(moves[i], nDepth);
 			DDZCombFactory ddz_CF = DDZCombFactory(Player::p3_EachCardNum, Player::p3_cardsNum);
 			vector<CARDSMOVE> mustWin = ddz_CF.getComb1LeastSingle().moves;
-			ddz_CF.setCarryCards1_1(&mustWin);
-			ddz_CF.setCarryCards3_1(&mustWin);
+			ddz_CF.setCarryCards1_1ForSantiao(&mustWin);
+			ddz_CF.setCarryCards3_1ForThreeJunko(&mustWin);
 			CardsTypeNumCount(mustWin);
 			
 			if (CanWin(mustWin, 2) && moves[i].status==STATUS_MAX)

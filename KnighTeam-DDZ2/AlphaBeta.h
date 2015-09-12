@@ -2,6 +2,7 @@
 #include "SearchEngine.h"
 #include "Player.h"
 #include "DDZMoveManager.h"
+#include "Eveluation.h"
 
 class AlphaBeta:public CSearchEngine
 {
@@ -19,6 +20,7 @@ public:
 
 private:
 	DDZMoveManager ddz_MM;
+	CEveluation ddz_Eve;
 	int IsFinal();
 	bool IsFinal1LastOne();
 	bool IsFinal2LastTwo();
@@ -44,6 +46,10 @@ private:
 	double cpy_p1_MemberShip[TOTAL_KINDS], cpy_p2_MemberShip[TOTAL_KINDS];
 
 	bool IsGetAGoodMove;
+	void FinalDeal();
 
+	void CanFinishGame();
+	int getTopCardInRemaining();
+	void getAGoodMoveAsOnlyOneCard(vector<CARDSMOVE> moves);
 };
 

@@ -502,6 +502,11 @@ void DDZMoveManager::setStatus(CARDSMOVE *move)
 		move->status = STATUS_SMALL;
 		return ;
 	}
+	if (move->cardsType == ZHADAN || move->cardsType == ROCKET)
+	{
+		move->status = STATUS_MAX;
+		return;
+	}
 	CMoveGenerator ddz_MG = CMoveGenerator();
 	
 

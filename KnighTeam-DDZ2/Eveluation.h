@@ -46,7 +46,7 @@ private:
 	void handle1(int value, int *cardsNum, int who);
 	void handle2(int value, int i, double randNum, int *cardsNum, unsigned *remaining, int who);
 	int GetCardsRightIfPass();
-	int IsCurrentTeam(bool current_IsLandlord, int turn);
+	bool IsCurrentTeam(bool current_IsLandlord, int turn);
 
 	inline int getValue(int i);
 	inline bool IsCardOriginator(int turn);

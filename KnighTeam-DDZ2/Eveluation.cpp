@@ -1296,7 +1296,7 @@ int CEveluation::GetCardsRightIfPass()
 	}
 }
 
-int CEveluation::IsCurrentTeam(bool current_IsLandlord, int turn)
+bool CEveluation::IsCurrentTeam(bool current_IsLandlord, int turn)
 {
 	if (current_IsLandlord)
 	{
@@ -1318,7 +1318,7 @@ int CEveluation::IsCurrentTeam(bool current_IsLandlord, int turn)
 			else
 				return true;
 		}
-		else
+		else if (turn == 0)
 		{
 			if (Player::p3_IsLandlord)
 				return false;
@@ -1434,9 +1434,9 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 		switch (currentValue)//¶¥ÅÆ
 		{
 			case K: score += 50; break;
-			case A: score += 40; break;
-			case T: score += 30; break;
-			case Q: score += 20; break;
+			case A: score += 40; break;	
+			case Q: score += 30; break;
+			case T: score += 20; break;
 			case X: score += 10; break;
 			case D: score += 5;  break;
 		}
@@ -1535,38 +1535,42 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 
 		case SINGLE:
 			{
-					   if (current_IsLandlord)
+					   if (outWay)
 					   {
-						   if (nextCardsNum == 1 || frontCardsNum == 1)
+						   if (current_IsLandlord)
 						   {
-								score-=15000;
-						   }
-					   }
-					   else
-					   {
-						   if (next_IsLandlord)
-						   {
-							   if (nextCardsNum == 1)
+							   if (nextCardsNum == 1 || frontCardsNum == 1)
 							   {
 								   score -= 15000;
-							   }
-							   if (frontCardsNum == 1)
-							   {
-								   score += 500;
 							   }
 						   }
 						   else
 						   {
-							   if (nextCardsNum == 1)
+							   if (next_IsLandlord)
 							   {
-								   score += 500;
+								   if (nextCardsNum == 1)
+								   {
+									   score -= 15000;
+								   }
+								   if (frontCardsNum == 1)
+								   {
+									   score += 500;
+								   }
 							   }
-							   if (frontCardsNum == 1)
+							   else
 							   {
-								   score -= 15000;
+								   if (nextCardsNum == 1)
+								   {
+									   score += 500;
+								   }
+								   if (frontCardsNum == 1)
+								   {
+									   score -= 15000;
+								   }
 							   }
 						   }
 					   }
+					 
 					   if (turn == 0 && outWay)
 					   {
 						   score += (15 * (Player::OnHandCardsTypeNum[SINGLE]-1));
@@ -1581,38 +1585,42 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 
 	case COUPLE:
 		{
-				   if (current_IsLandlord)
+				   if (outWay)
 				   {
-					   if (nextCardsNum == 2 || frontCardsNum == 2)
+					   if (current_IsLandlord)
 					   {
-						   score -= 15000;
-					   }
-				   }
-				   else
-				   {
-					   if (next_IsLandlord)
-					   {
-						   if (nextCardsNum == 2)
+						   if (nextCardsNum == 2 || frontCardsNum == 2)
 						   {
 							   score -= 15000;
-						   }
-						   if (frontCardsNum == 2)
-						   {
-							   score += 500;
 						   }
 					   }
 					   else
 					   {
-						   if (nextCardsNum == 2)
+						   if (next_IsLandlord)
 						   {
-							   score += 500;
+							   if (nextCardsNum == 2)
+							   {
+								   score -= 15000;
+							   }
+							   if (frontCardsNum == 2)
+							   {
+								   score += 500;
+							   }
 						   }
-						   if (frontCardsNum == 2)
+						   else
 						   {
-							   score -= 15000;
+							   if (nextCardsNum == 2)
+							   {
+								   score += 500;
+							   }
+							   if (frontCardsNum == 2)
+							   {
+								   score -= 15000;
+							   }
 						   }
 					   }
 				   }
+				   
 				   if (turn == 0 && outWay)
 				   {
 					   score += (10 * Player::OnHandCardsTypeNum[COUPLE]);
@@ -1716,7 +1724,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			vector<unsigned> cardsInfo = play->getThree_ShunValue(current_cards);
 			int startValue = cardsInfo.at(0);
 			int endValue = cardsInfo.at(1);
-			score += (endValue-startValue + 1)* 100;
+			score += (endValue-startValue + 1)* 200;
 		}
 		break;
 
@@ -1747,7 +1755,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			vector<unsigned> cardsInfo = play->getFour_TwoValue(current_cards);
 			int FourValue = cardsInfo.at(0);
 
-			score-=100;
+			score-=2000;
 		}
 		break;
 
@@ -1756,7 +1764,7 @@ int CEveluation::EveluateMove(CARDSMOVE* move, int whoseGo)
 			vector<unsigned> cardsInfo = play->getFour_TwoCoupleValue(current_cards);
 			int FourValue = cardsInfo.at(0);
 			
-			score-=100;
+			score-=2000;
 		}
 		break;
 	}

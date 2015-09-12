@@ -24,8 +24,8 @@ int CThinkTable::getBid()
 	cardsNum = Player::p3_cardsNum;
 	DDZCombFactory ddz_CF = DDZCombFactory(cards,Player::p3_cardsNum);
 	vector<CARDSMOVE> moves = ddz_CF.getComb1LeastSingle().moves;
-	ddz_CF.setCarryCards1_1(&moves);
-	ddz_CF.setCarryCards3_1(&moves);
+	ddz_CF.setCarryCards1_1ForSantiao(&moves);
+	ddz_CF.setCarryCards3_1ForThreeJunko(&moves);
 	
 
 	bid =getBidByComb(moves.size());//根据组合步数叫分

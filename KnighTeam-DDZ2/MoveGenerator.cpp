@@ -99,8 +99,8 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 		
 
 		moves = c1.moves;
-		ddz_CF.setCarryCards1(&moves);
-		ddz_CF.setCarryCards3(&moves);
+		ddz_CF.setCarryCards1ForSantiao(&moves);
+		ddz_CF.setCarryCards3ForThreeJunko(&moves);
 		ddz_CF.setCarryCards4(&moves);
 		
 		FinalMovesDeal(&moves, turn);
@@ -119,8 +119,8 @@ vector<CARDSMOVE> CMoveGenerator::getMoves(int whoseGo)
 		
 		vector<CARDSMOVE> tmp_moves = c1.moves;
 		GeneralSplitDeal(&tmp_moves, tmp_EachCardNum);
-		ddz_CF.setCarryCards1_2(&tmp_moves);
-		ddz_CF.setCarryCards3(&tmp_moves);
+		ddz_CF.setCarryCards1_2ForSantiao(&tmp_moves);
+		ddz_CF.setCarryCards3ForThreeJunko(&tmp_moves);
 		ddz_CF.setCarryCards4(&tmp_moves);
 		moves = getMovesByCombMovesForOneMove(lastMove, tmp_moves);
 			
@@ -2484,7 +2484,8 @@ bool CMoveGenerator::IsValidMove(CARDSMOVE m1,CARDSMOVE m2)
 		}
 	}
 
-	if(cardsType1!=2&&cardsType1!=1&&(cardsType2==2||cardsType2==1))
+	if (cardsType1 != ZHADAN &&cardsType1 != ROCKET 
+			&& (cardsType2 == ZHADAN || cardsType2 == ROCKET))
 	{
 		return true;
 	}

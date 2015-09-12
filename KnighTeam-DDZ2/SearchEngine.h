@@ -27,6 +27,8 @@ public:
 
 	bool CanWin(vector<CARDSMOVE> FirstMoves, int outWay);
 	bool CanWin2(vector<CARDSMOVE> moves);
+	bool CanWin3(vector<CARDSMOVE> moves);
+	bool CanWin4(vector<CARDSMOVE> moves);
 //	virtual vector<int> SearchAGoodMove(Player p);
 
 
@@ -36,5 +38,7 @@ private:
 	int ReSpring(int turn);
 	int GetAllGain(int turn);
 	DDZMoveManager ddz_MM;
+
+	bool IsMaxOnlyOne(CARDSMOVE move);
 };
 

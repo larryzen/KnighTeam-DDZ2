@@ -17,18 +17,32 @@ public:
 	Comb getComb1LeastSingle();		// 找到最少单牌的组合
 	Comb getComb2LeastMoves();		// 找到最少组合步数的组合
 	Comb getComb3MaxGain();			// 找到收益最大的组合
+	Comb getComb4Final();
 	Comb getCombByCardsType(CARDSMOVE key);
 	int getIndexOfSecondMinSingle(CombsLib combsLib);
 	CombsLib combs;
 	Comb comb;
-	void setCarryCards1(vector<CARDSMOVE> *moves);
-	void setCarryCards3(vector<CARDSMOVE> *moves);
+	void setCarryCards1ForSantiao(vector<CARDSMOVE> *moves);
+	void setCarryCards1_1ForSantiao(vector<CARDSMOVE> *moves);
+	void setCarryCards1_2ForSantiao(vector<CARDSMOVE> *moves);
+	void setCarryCards1_3ForSantiao(vector<CARDSMOVE> *moves, int topCard);
+
+	void setCarryCards3ForThreeJunko(vector<CARDSMOVE> *moves);
+	void setCarryCards3_1ForThreeJunko(vector<CARDSMOVE> *moves);
+	void setCarryCards3_2ForThreeJunko(vector<CARDSMOVE> *moves);
+
 	void setCarryCards4(vector<CARDSMOVE> *moves);
+	
+	void setCarryCards5ForZhaDan(vector<CARDSMOVE> *moves);
 
-	void setCarryCards1_1(vector<CARDSMOVE> *moves);
-	void setCarryCards3_1(vector<CARDSMOVE> *moves);
 
-	void setCarryCards1_2(vector<CARDSMOVE> *moves);
+	static bool IsCorrect(Comb comb, int cardsNum);
+	static bool IsContainsCardsMove(vector<CARDSMOVE> cms, CARDSMOVE cm);
+	static bool IsSameCardsMove(CARDSMOVE cm1, CARDSMOVE cm2);
+	static bool IsSameComb(Comb c1, Comb c2);
+	static bool IsContainsComb(CombsLib combs, Comb comb);
+
+	static void quickSort(unsigned *arr, int first, int last, int len);
 	private:
 		unsigned comb_cards[15];
 		int onHandCardsNum;
@@ -47,18 +61,17 @@ public:
 		int getCardsTypeByBasicCards(int cardsNum);
 		void getBasicTypeComb(unsigned *cards, int start, int end, int cardsNum);
 
-		bool IsCorrect(Comb comb, int cardsNum);
-		bool IsContainsCardsMove(vector<CARDSMOVE> cms, CARDSMOVE cm);
-		bool IsSameCardsMove(CARDSMOVE cm1, CARDSMOVE cm2);
-		bool IsSameComb(Comb c1, Comb c2);
-		bool IsContainsComb(CombsLib combs, Comb comb);
+		
 
-		void quickSort(unsigned *arr, int first, int last, int len);
+		
 		
 		void setSingleNum(Comb *comb);
 		void setSantiaoNum(Comb *comb);
 		void setDualJunkoNum(Comb *comb);
 		void setGain(Comb *cb);
+
+		void setGain2(Comb *cb);
+		void setSingleNum2(Comb *cb);
 
 		int compareSingle(CARDSMOVE single1, CARDSMOVE single2);
 		int compareSingleNum(Comb cb1, Comb cb2);

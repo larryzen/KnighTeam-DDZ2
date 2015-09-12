@@ -4,6 +4,7 @@
 #include "time.h"
 #include "DDZMoveManager.h"
 #include "FileWriter.h"
+#include "DDZCombFactory.h"
 
 using namespace std;
 
@@ -197,6 +198,9 @@ int CSearchEngine::GetAllGain(int turn)
 	return gain() + Spring(turn) + ReSpring(turn);
 }
 
+/**
+*	被动出牌必胜，只考虑炸、火箭管牌
+*/
 bool CSearchEngine::CanWin2(vector<CARDSMOVE> moves)
 {
 	ddz_MM.setMovesStatus(&moves);
@@ -215,7 +219,7 @@ bool CSearchEngine::CanWin2(vector<CARDSMOVE> moves)
 	{
 		for (int k = 0; k < maxMoves.size(); k++)
 		{
-			bool canPlay = CMoveGenerator().IsValidMove(Player::lastMove, maxMoves[k]);
+			bool canPlay = CMoveGenerator::IsValidMove(Player::lastMove, maxMoves[k]);
 			if (canPlay)
 			{
 				bestMove = maxMoves[k];
@@ -227,6 +231,241 @@ bool CSearchEngine::CanWin2(vector<CARDSMOVE> moves)
 	return false;
 }
 
+/*
+*	主动出牌下，存在22(MAX)、大王(MAX)、66、J、A；达到必胜状态
+*   maxsize >= (othersize - 1)
+*/
+bool CSearchEngine::CanWin3(vector<CARDSMOVE> moves)
+{
+	ddz_MM.setMovesStatus(&moves);
+	vector<CARDSMOVE> maxMoves = vector<CARDSMOVE>();//对status为STATUS_MAX的走步存储
+	vector<CARDSMOVE> otherMoves = vector<CARDSMOVE>();
+	for (int i = moves.size() - 1; i >= 0; i--)
+	{
+		if (IsMaxOnlyOne(moves[i]))
+		{
+			maxMoves.push_back(moves[i]);
+		}
+		else
+		{
+			otherMoves.push_back(moves[i]);
+		}
+	}
+	vector<CARDSMOVE> oneToOne = vector<CARDSMOVE>();
+	if (maxMoves.empty())//没有max走步
+	{
+		return false;
+	}
+	if (maxMoves.size() < otherMoves.size() - 1)
+	{
+		return false;
+	}
+	else
+	{
+		CARDSMOVE goodMove = CARDSMOVE();
+		goodMove.cardsType = PASS;
+		for (int k = maxMoves.size() - 1; k >= 0; k--)
+		{
+			CARDSMOVE maxMove = maxMoves[k];
+			if (maxMove.cardsType == ZHADAN || maxMove.cardsType == ROCKET)
+			{
+				CARDSMOVE m = CARDSMOVE();
+				m.cardsType = PASS;
+				oneToOne.push_back(m);//如果为炸弹，火箭先不选择对应的小牌
+			}
+			else
+			{
+				for (int t = otherMoves.size() - 1; t >= 0; t--)
+				{
+					if (CMoveGenerator::IsValidMove(otherMoves[t], maxMove))
+					{
+						goodMove = otherMoves[t];
+						oneToOne.push_back(otherMoves[t]);
+						vector<CARDSMOVE>::iterator it = otherMoves.begin();
+						otherMoves.erase(it+t);
+					}
+				}
+			}
+			
+		}
+
+		for (int i = oneToOne.size() - 1; i >= 0; i--)
+		{
+			if (oneToOne[i].cardsType == PASS)
+			{
+				if (otherMoves.size() > 0)
+				{
+					oneToOne[i] = otherMoves[0];
+					otherMoves.erase(otherMoves.begin());
+				}
+			}
+		}
+
+		if (otherMoves.size() <= 1)
+		{
+			if (goodMove.cardsType != PASS)
+			{
+				bestMove = goodMove;//将非炸对应小牌作为走步
+				return true;
+			}
+			else 
+			{
+				for (int tmp = 0; tmp < oneToOne.size(); tmp++)
+				{
+					if (oneToOne[tmp].cardsType != PASS)
+					{
+						bestMove = oneToOne[tmp];// 没有非炸对应小牌，选一个炸对应小牌
+						return true;
+					}		
+				}
+
+				bestMove = maxMoves[0];//没有小牌，选一个大牌作为走步
+				return true;
+				
+			}
+			
+		}
+		
+		return false;
+	}
+
+	return false;
+}
+
+/**
+*	被动出牌必胜，7777（管牌）、3、大王（Max)、66、22（Max)、J
+*	maxsize >= othersize
+*/
+bool CSearchEngine::CanWin4(vector<CARDSMOVE> moves)
+{
+	ddz_MM.setMovesStatus(&moves);
+	vector<CARDSMOVE> maxMoves = vector<CARDSMOVE>();//对status为STATUS_MAX的走步存储
+	vector<CARDSMOVE> otherMoves = vector<CARDSMOVE>();//手中除去status_Max以后的牌
+	vector<CARDSMOVE> canPlayMoves = vector<CARDSMOVE>();//能管上其他玩家出的牌的status_Max的牌
+	vector<CARDSMOVE> oneToOne = vector<CARDSMOVE>();
+	for (int i = moves.size() - 1; i >= 0; i--)
+	{
+		if (moves[i].status == STATUS_MAX)
+		{
+			maxMoves.push_back(moves[i]);
+		}
+		else
+		{
+			otherMoves.push_back(moves[i]);
+		}
+	}
+
+	
+
+
+	if (maxMoves.size() < otherMoves.size() )
+	{
+		return false;
+	}
+	else
+	{
+		CARDSMOVE goodMove = CARDSMOVE();
+		goodMove.cardsType = PASS;
+		for (int i = maxMoves.size() - 1; i >= 0; i--)
+		{
+			if (CMoveGenerator::IsValidMove(Player::lastMove, maxMoves[i]))
+			{
+				goodMove = maxMoves[i];
+				canPlayMoves.push_back(maxMoves[i]);
+			}
+		}
+		if (canPlayMoves.empty())//手中大牌不能管上其他玩家出牌，返回false；
+		{
+			return false;
+		}
+		
+		for (int i = canPlayMoves.size() - 1; i >= 0; i--)
+		{
+			for (int k = maxMoves.size() - 1; k >= 0; k--)
+			{
+				CARDSMOVE maxMove = maxMoves[k];
+				if (DDZCombFactory::IsSameCardsMove(canPlayMoves[i], maxMoves[k]))
+				{
+					CARDSMOVE m = CARDSMOVE();
+					m.cardsType = -2;//如果为管其他玩家的牌，先不选择对应的小牌，cardsType=-2
+					oneToOne.push_back(m);
+					continue;
+				}
+				if (maxMove.cardsType == ZHADAN || maxMove.cardsType == ROCKET)
+				{
+					CARDSMOVE m = CARDSMOVE();
+					m.cardsType = PASS;//如果为炸弹，火箭先不选择对应的小牌，cardsType=Pass
+					oneToOne.push_back(m);
+				}
+				else
+				{
+					for (int t = otherMoves.size() - 1; t >= 0; t--)
+					{
+						if (CMoveGenerator::IsValidMove(otherMoves[t], maxMove))
+						{
+							goodMove = otherMoves[t];
+							oneToOne.push_back(otherMoves[t]);
+							vector<CARDSMOVE>::iterator it = otherMoves.begin();
+							otherMoves.erase(it + t);
+						}
+					}
+				}
+
+				for (int n = oneToOne.size() - 1; n >= 0; n--)
+				{
+					if (oneToOne[n].cardsType == PASS)
+					{
+						if (otherMoves.size() > 0)
+						{
+							oneToOne[n] = otherMoves[0];
+							otherMoves.erase(otherMoves.begin());
+						}
+					}
+				}
+
+				if (otherMoves.size() <= 1)
+				{
+					bestMove = canPlayMoves[i];
+					return true;
+				}
+
+				return false;
+			}
+		}
+		
+		return false;
+	}
+}
+
+/*
+*
+*	走步当前最大牌，且在对手手中没有此牌,唯一最大牌
+*/
+bool CSearchEngine::IsMaxOnlyOne(CARDSMOVE move)
+{
+	bool onlyOne = true;
+	/*if (move.cardsType == SINGLE || move.cardsType == COUPLE)
+	{
+		unsigned cards[15] = { 0 };
+		for (int i = move.cards.size() - 1; i >= 0; i--)
+		{
+			cards[move.cards[i]]++;
+		}
+
+		for (int j = 0; j < 15; j++)
+		{
+			if (cards[j] != 0)
+			{
+				if (Player::remaining[j] >= cards[j])
+				{
+					onlyOne = false;
+				}
+			}
+		}
+	}*/
+	
+	return move.status == STATUS_MAX && onlyOne;
+}
 bool CSearchEngine::CanWin(vector<CARDSMOVE> FirstMoves, int outWay)
 {
 	if (outWay==1 || outWay == 2)
